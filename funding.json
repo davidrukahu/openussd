@@ -1,0 +1,81 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "David W",
+    "email": "drukahu09@gmail.com",
+    "phone": "",
+    "description": "Software engineer based in Nairobi, Kenya. Maintainer of OpenUSSD and of three plugins on the WordPress.org plugin directory (Doctor Subs, Draft Order Control, EdgeMail). Day job at Automattic working on open-source products.",
+    "webpageUrl": {
+      "url": "https://github.com/davidrukahu"
+    }
+  },
+  "projects": [
+    {
+      "guid": "openussd",
+      "name": "OpenUSSD",
+      "description": "An open-source gateway and SDK that makes web services accessible from feature phones over USSD and SMS. Three components: a self-hostable gateway speaking USSD/SMS protocols with multi-tenant routing and per-MNO telco adapters; SDKs in Go and TypeScript for building USSD applications as state machines with typed sessions, i18n, and 182-character-per-screen handling; and a reference adapter that exposes ActivityPub Fediverse content (Mastodon, PeerTube, PixelFed) through USSD menus. Targets the ~1.1B feature-phone users in Sub-Saharan Africa and South Asia and provides a maintained replacement for Praekelt's abandoned Vumi.",
+      "webpageUrl": {
+        "url": "https://github.com/davidrukahu/openussd"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/davidrukahu/openussd"
+      },
+      "licenses": [
+        "spdx:AGPL-3.0-or-later"
+      ],
+      "tags": [
+        "ussd",
+        "sms",
+        "feature-phone",
+        "telecommunications",
+        "fediverse",
+        "activitypub",
+        "mastodon",
+        "africa",
+        "digital-inclusion",
+        "civic-tech",
+        "gateway",
+        "sdk"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "primary-email",
+        "type": "other",
+        "address": "drukahu09@gmail.com",
+        "description": "Direct outreach for grant programmes, sponsorship, or pilot partnerships. The maintainer will reply with the most appropriate channel (bank transfer, OpenCollective, GitHub Sponsors, or grant invoicing) for each conversation."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "core-development-year-1",
+        "status": "active",
+        "name": "Year-1 core development",
+        "description": "12 months of focused work on the gateway, Go and TypeScript SDKs, the Fediverse reference adapter, two telco adapters (Safaricom, MTN), an independent security audit, developer documentation, translation into French and Swahili, and direct costs (MNO sandbox fees, test devices, CI, hosting). Delivers a v1.0 release a single developer can self-host in an afternoon.",
+        "amount": 50000,
+        "currency": "EUR",
+        "frequency": "one-time",
+        "channels": [
+          "primary-email"
+        ]
+      },
+      {
+        "guid": "ongoing-maintenance",
+        "status": "active",
+        "name": "Ongoing maintenance and ecosystem support",
+        "description": "Recurring support after v1.0: security patching, new MNO adapters, Fediverse-protocol updates, community engagement, and pilot integrations. Any monthly amount helps keep the gateway and SDKs maintained.",
+        "amount": 0,
+        "currency": "EUR",
+        "frequency": "monthly",
+        "channels": [
+          "primary-email"
+        ]
+      }
+    ],
+    "history": []
+  }
+}
