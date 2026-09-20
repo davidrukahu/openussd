@@ -1,0 +1,44 @@
+# Runs the gateway and the Fediverse reference adapter together, which is
+# everything needed to dial a working USSD dialogue with cmd/ussdsim.
+#
+#   export FEDIVERSE_WEBHOOK_SECRET=$(openssl rand -hex 32)
+#   docker compose up --build
+#   go run ./cmd/ussdsim
+
+services:
+  gateway:
+    build:
+      context: .
+      args:
+        TARGET: ./gateway/cmd/gateway
+    command: ["-config", "/etc/openussd/gateway.yaml"]
+    environment:
+      FEDIVERSE_WEBHOOK_SECRET: ${FEDIVERSE_WEBHOOK_SECRET:?set FEDIVERSE_WEBHOOK_SECRET, e.g. export FEDIVERSE_WEBHOOK_SECRET=$(openssl rand -hex 32)}
+    volumes:
+      - ./gateway/gateway.example.yaml:/etc/openussd/gateway.yaml:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      fediverse:
+        condition: service_started
+
+  fediverse:
+    build:
+      context: .
+      args:
+        TARGET: ./adapters/fediverse
+    environment:
+      FEDIVERSE_WEBHOOK_SECRET: ${FEDIVERSE_WEBHOOK_SECRET:?}
+      FEDIVERSE_LISTEN: ":8081"
+      # Any Mastodon instance with a public timeline works.
+      FEDIVERSE_INSTANCE: ${FEDIVERSE_INSTANCE:-https://mstdn.social}
+    expose:
+      - "8081"
+
+  # Only needed when the gateway runs more than one replica. Switch
+  # session.backend to "redis" in gateway.example.yaml to use it.
+  redis:
+    image: redis:7-alpine
+    profiles: ["redis"]
+    expose:
+      - "6379"
