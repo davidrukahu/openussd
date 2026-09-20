@@ -18,7 +18,7 @@ Thank you for your interest in OpenUSSD. The project is in its planning phase; d
 
 ## Development setup
 
-Go 1.25 or newer, and Docker if you want the compose demo.
+Go 1.24 or newer, and Docker if you want the compose demo.
 
 ```bash
 git clone https://github.com/davidrukahu/openussd.git

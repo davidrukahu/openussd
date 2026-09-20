@@ -1,6 +1,6 @@
 # Builds any of the repository's binaries. Pass TARGET to choose:
 #   docker build --build-arg TARGET=./adapters/fediverse .
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.24
 
 FROM golang:${GO_VERSION}-alpine AS build
 WORKDIR /src
