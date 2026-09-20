@@ -39,9 +39,18 @@ func New() *Adapter { return &Adapter{} }
 func (a *Adapter) Name() string { return Name }
 
 // Verify always succeeds. The simulator endpoint is for local development;
-// production deployments must not expose it, which the config validation
-// warns about at startup.
+// production deployments must not expose it, which the gateway warns about
+// at startup.
 func (a *Adapter) Verify(*http.Request) error { return nil }
+
+// RequiresAllowlist reports false, and that is a deliberate exception.
+//
+// This adapter exists so the project runs with no telco account, which
+// means it has to work out of the box inside a container network where no
+// useful allowlist can be written in advance. It authenticates nothing, so
+// the gateway warns whenever it is enabled on a non-loopback address, and
+// the deployment docs say plainly not to expose it.
+func (a *Adapter) RequiresAllowlist() bool { return false }
 
 // request is the simulator's inbound wire shape.
 type request struct {

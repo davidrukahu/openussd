@@ -32,6 +32,7 @@ func NewHandler[S any](app *App[S], secret string, log *slog.Logger) *Handler[S]
 	if log == nil {
 		log = slog.Default()
 	}
+	app.WithLogger(log)
 	return &Handler[S]{app: app, secret: secret, log: log, now: func() time.Time { return time.Now().UTC() }}
 }
 

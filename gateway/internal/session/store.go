@@ -57,9 +57,12 @@ func (k Key) Validate() error {
 // Session is the gateway's record of one in-flight dialogue.
 type Session struct {
 	Key Key `json:"key"`
-	// Tenant is the tenant this session was routed to on its first turn.
-	// Fixed for the life of the session: re-routing mid-dialogue would hand
-	// one tenant's state to another.
+	// Tenant is the tenant currently answering this dialogue.
+	//
+	// It can change mid-session: routing is re-evaluated every turn so a
+	// shared shortcode can hand a dialogue from its menu tenant to a
+	// service tenant. When it changes, State and Turn are reset, so no
+	// tenant ever reads what another stored.
 	Tenant string `json:"tenant"`
 	// MSISDN is the subscriber number as claimed by the network.
 	MSISDN string `json:"msisdn"`

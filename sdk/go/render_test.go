@@ -22,11 +22,12 @@ func TestTruncate(t *testing.T) {
 	}{
 		{"short enough", "hello", 10, "hello"},
 		{"exactly at the limit", "hello", 5, "hello"},
-		{"breaks at a word", "the quick brown fox", 15, "the quick…"},
-		{"mid-word when no break is close", "supercalifragilistic", 10, "supercali…"},
-		{"limit of one", "hello", 1, "…"},
+		{"breaks at a word", "the quick brown fox", 15, "the quick..."},
+		{"mid-word when no break is close", "supercalifragilistic", 10, "superca..."},
+		{"limit below the marker", "hello", 1, "."},
+		{"limit at the marker", "hello", 3, "..."},
 		{"zero limit", "hello", 0, ""},
-		{"multibyte counted as runes", "Habari yako rafiki yangu", 12, "Habari yako…"},
+		{"multibyte counted as runes", "Habari yako rafiki yangu", 12, "Habari..."},
 	}
 
 	for _, tc := range tests {
@@ -289,5 +290,31 @@ func BenchmarkPaginate(b *testing.B) {
 				Paginate(body, 60)
 			}
 		})
+	}
+}
+
+// TestTruncationMarkerStaysInTheGSMAlphabet is the regression test for the
+// worst budget bug in this package's history: a "…" marker is not in GSM
+// 03.38, so it re-encoded every truncated screen as UCS-2 and cut its
+// capacity from 182 to 70. Truncate then returned strings the gateway
+// rejected.
+func TestTruncationMarkerStaysInTheGSMAlphabet(t *testing.T) {
+	if canonical.EncodingOf(ellipsis) != canonical.EncodingGSM7 {
+		t.Fatalf("the truncation marker %q is not GSM-safe", ellipsis)
+	}
+
+	ascii := strings.Repeat("plain ascii text ", 40)
+
+	got := Truncate(ascii, 150)
+	if _, enc := canonical.ScreenCost(got); enc != canonical.EncodingGSM7 {
+		t.Errorf("Truncate re-encoded ASCII as %s", enc)
+	}
+	if !Fits(got) {
+		t.Error("Truncate returned a screen the gateway would reject")
+	}
+
+	// Shrink must use the whole GSM budget, not the UCS-2 one.
+	if n := len([]rune(Shrink(ascii))); n < 170 {
+		t.Errorf("Shrink kept only %d of 182 available characters", n)
 	}
 }

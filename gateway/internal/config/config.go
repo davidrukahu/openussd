@@ -147,16 +147,13 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("no tenants configured: the gateway would answer nothing")
 	}
 
+	// Whether a given adapter may run without an allowlist is a property
+	// of the adapter, checked where the adapters are wired. Config only
+	// checks that something is enabled at all.
 	var enabled int
-	for name, a := range c.Adapters {
-		if !a.Enabled {
-			continue
-		}
-		enabled++
-		if name == "africastalking" && len(a.AllowedSources) == 0 {
-			// The provider signs nothing, so an empty allowlist means
-			// anyone who finds the URL can forge any subscriber's input.
-			return fmt.Errorf("adapter %q is enabled with no allowed_sources: it would accept forged callbacks from anywhere", name)
+	for _, a := range c.Adapters {
+		if a.Enabled {
+			enabled++
 		}
 	}
 	if enabled == 0 {

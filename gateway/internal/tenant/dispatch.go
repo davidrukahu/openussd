@@ -33,11 +33,26 @@ type Dispatcher struct {
 // trips to a dialogue the network will abandon in seconds.
 const maxIdleConnsPerTenant = 100
 
+// maxConnsPerTenant bounds total connections to one tenant, open and idle
+// together, so a slow tenant cannot exhaust the process's descriptors.
+const maxConnsPerTenant = 256
+
 // NewDispatcher returns a dispatcher. A nil client means a default one
 // whose per-request deadline comes from the tenant's timeout.
 func NewDispatcher(client *http.Client) *Dispatcher {
 	if client == nil {
-		client = &http.Client{Transport: pooledTransport()}
+		client = &http.Client{
+			Transport: pooledTransport(),
+			// Never follow a redirect. Go strips Authorization and Cookie
+			// across hosts but not our own signature headers, and on 307
+			// or 308 it replays the body too. A tenant that is
+			// compromised, misconfigured, or simply has an open redirect
+			// could otherwise forward signed subscriber events anywhere,
+			// including a cloud metadata endpoint.
+			CheckRedirect: func(*http.Request, []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
 	}
 	return &Dispatcher{client: client, now: func() time.Time { return time.Now().UTC() }}
 }
@@ -48,6 +63,10 @@ func pooledTransport() *http.Transport {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
 	tr.MaxIdleConnsPerHost = maxIdleConnsPerTenant
 	tr.MaxIdleConns = maxIdleConnsPerTenant * 4
+	// Idle-pool size is not a concurrency cap. Without this a tenant
+	// sitting at its timeout lets the gateway open one new socket per
+	// in-flight dialogue until it runs out of file descriptors.
+	tr.MaxConnsPerHost = maxConnsPerTenant
 	return tr
 }
 

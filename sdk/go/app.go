@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"strings"
 
 	"github.com/davidrukahu/openussd/canonical"
 )
@@ -23,9 +25,19 @@ type Context[S any] struct {
 	// Lang is the resolved language for this session.
 	Lang string
 
+	notice string
 	ctx    context.Context
 	bundle *Bundle
 }
+
+// Notice is the message to show above this screen, set when the previous
+// turn returned Stay: a validation error, usually.
+//
+// A screen that builds a menu should fold it into the title it passes to
+// Menu or MenuFit, so the notice is measured as part of the screen. A
+// screen that ignores it still gets it prepended, but then the fit was
+// calculated without it and a long menu can lose its last lines.
+func (c *Context[S]) Notice() string { return c.notice }
 
 // Ctx returns the context for this turn, carrying the gateway's deadline.
 //
@@ -88,6 +100,7 @@ type App[S any] struct {
 	screens map[string]Screen[S]
 	start   string
 	bundle  *Bundle
+	log     *slog.Logger
 	// DefaultLang is used when a session has no language preference.
 	DefaultLang string
 }
@@ -123,6 +136,19 @@ func NewApp[S any](start string, screens ...Screen[S]) (*App[S], error) {
 	return app, nil
 }
 
+// WithLogger attaches a logger. Without one the SDK logs to slog.Default.
+func (a *App[S]) WithLogger(log *slog.Logger) *App[S] {
+	a.log = log
+	return a
+}
+
+func (a *App[S]) logger() *slog.Logger {
+	if a.log == nil {
+		return slog.Default()
+	}
+	return a.log
+}
+
 // WithBundle attaches translations.
 func (a *App[S]) WithBundle(b *Bundle) *App[S] {
 	a.bundle = b
@@ -151,7 +177,12 @@ func (a *App[S]) Turn(ctx context.Context, ev canonical.Event, turn int, stored 
 	if len(stored) > 0 {
 		if err := json.Unmarshal(stored, &st); err != nil {
 			// Corrupt state restarts the dialogue rather than killing it:
-			// the user gets the opening menu, not a dead shortcode.
+			// the user gets the opening menu, not a dead shortcode. It is
+			// logged because the usual cause is a state-schema change
+			// meeting in-flight dialogues, and the alternative evidence
+			// is user complaints.
+			a.logger().Warn("discarding unreadable session state, restarting the dialogue",
+				"error", err, "session_id", ev.SessionID, "turn", turn)
 			st = state[S]{}
 		}
 	}
@@ -207,11 +238,15 @@ func (a *App[S]) Turn(ctx context.Context, ev canonical.Event, turn int, stored 
 // render produces a screen, optionally prefixed with a message, and encodes
 // the state to store alongside it.
 func (a *App[S]) render(ctx *Context[S], screen Screen[S], prefix string, st *state[S]) (canonical.Response, json.RawMessage, error) {
+	ctx.notice = prefix
 	body, err := screen.Prompt(ctx)
 	if err != nil {
 		return canonical.Response{}, nil, fmt.Errorf("openussd: rendering screen %q: %w", screen.Name, err)
 	}
-	if prefix != "" {
+
+	// A screen that read Notice has already placed it, and measured the
+	// rest of the screen around it. Only prepend for screens that did not.
+	if prefix != "" && !strings.HasPrefix(body, prefix) {
 		body = prefix + "\n" + body
 	}
 

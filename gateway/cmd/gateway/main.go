@@ -149,6 +149,14 @@ func newRegistry(cfg *config.Config) (*adapter.Registry, error) {
 			return nil, fmt.Errorf("config: unknown adapter %q", name)
 		}
 
+		if adapter.NeedsAllowlist(base) && len(ac.AllowedSources) == 0 {
+			// Failing closed: this adapter's provider authenticates
+			// nothing, so without an allowlist the endpoint would accept
+			// forged input from anywhere that can reach it.
+			return nil, fmt.Errorf(
+				"adapter %q is enabled with no allowed_sources: it would accept forged callbacks from anywhere", name)
+		}
+
 		guarded := base
 		if len(ac.AllowedSources) > 0 {
 			allowed, err := adapter.ParsePrefixes(ac.AllowedSources)

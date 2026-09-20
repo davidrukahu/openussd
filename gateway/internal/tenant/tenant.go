@@ -96,12 +96,17 @@ func (t Tenant) EffectiveTimeout() time.Duration {
 // ErrNoRoute means no configured tenant answers this shortcode and input.
 type ErrNoRoute struct {
 	Shortcode string
-	Path      []string
+	// Segments is how many input segments the dialogue had reached.
+	//
+	// The segments themselves are deliberately not carried: this error is
+	// logged, and a user's input can include a PIN typed on an earlier
+	// screen. The count is enough to tell a first screen from a deep one.
+	Segments int
 }
 
 func (e ErrNoRoute) Error() string {
-	return fmt.Sprintf("tenant: no route for shortcode %q with input %q",
-		e.Shortcode, strings.Join(e.Path, "*"))
+	return fmt.Sprintf("tenant: no route for shortcode %q at input depth %d",
+		e.Shortcode, e.Segments)
 }
 
 // Router resolves events to tenants.
@@ -175,7 +180,7 @@ func (r *Router) Route(ev canonical.Event) (Tenant, canonical.Event, error) {
 			return t, routed, nil
 		}
 	}
-	return Tenant{}, ev, ErrNoRoute{Shortcode: ev.Shortcode, Path: ev.Path}
+	return Tenant{}, ev, ErrNoRoute{Shortcode: ev.Shortcode, Segments: len(ev.Path)}
 }
 
 // Tenants returns every configured tenant, for startup logging and /readyz.

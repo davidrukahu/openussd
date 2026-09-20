@@ -96,6 +96,7 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 			"nav.prev":       "2. Prev",
 			"nav.back":       "0. Back",
 			"error.fetch":    "Could not reach the instance. Try again.",
+			"error.empty":    "Nothing to show here.",
 			"error.choice":   "Invalid choice.",
 			"session.ended":  "Goodbye.",
 			"about.body":     "OpenUSSD: an open gateway and SDK bringing the federated web to feature phones. github.com/davidrukahu/openussd",
@@ -179,7 +180,16 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 			// Quit is a footer item so it survives a list too long for one
 			// screen. Whatever does not fit is dropped from the list, and
 			// the count tells the handler which keys are real.
-			screen, shown := openussd.MenuFit(c.T("timeline.title"), items,
+			// The notice is part of the title so MenuFit measures the
+			// screen with it. Prepending it afterwards would push the
+			// last options and the footer off the bottom, and leave
+			// Listed claiming keys the user cannot see.
+			title := c.T("timeline.title")
+			if notice := c.Notice(); notice != "" {
+				title = notice + "\n" + title
+			}
+
+			screen, shown := openussd.MenuFit(title, items,
 				[]openussd.MenuItem{{Key: "0", Label: c.T("menu.quit")}})
 			c.State.Listed = shown
 			return screen, nil
@@ -277,7 +287,10 @@ func postPages(c *openussd.Context[state]) []string {
 func renderPost(c *openussd.Context[state]) string {
 	pages := postPages(c)
 	if len(pages) == 0 {
-		return c.T("error.fetch")
+		// Not a fetch failure: an empty body, or a cursor pointing past
+		// the timeline. Saying "could not reach the instance" sends the
+		// operator after a network problem that does not exist.
+		return c.T("error.empty")
 	}
 	if c.State.Page >= len(pages) {
 		c.State.Page = len(pages) - 1

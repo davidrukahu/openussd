@@ -56,16 +56,34 @@ func ParsePrefixes(in []string) ([]netip.Prefix, error) {
 			if err != nil {
 				return nil, fmt.Errorf("adapter: bad CIDR %q: %w", s, err)
 			}
-			out = append(out, p.Masked())
+			out = append(out, unmapPrefix(p).Masked())
 			continue
 		}
 		a, err := netip.ParseAddr(s)
 		if err != nil {
 			return nil, fmt.Errorf("adapter: bad address %q: %w", s, err)
 		}
+		a = a.Unmap()
 		out = append(out, netip.PrefixFrom(a, a.BitLen()))
 	}
 	return out, nil
+}
+
+// unmapPrefix rewrites an IPv4-mapped IPv6 prefix into plain IPv4 form.
+//
+// peerAddr always unmaps, and netip.Prefix.Contains is false across
+// families, so without this an entry like "::ffff:203.0.113.0/120" matches
+// nothing at all. It fails closed, but silently, which is how an operator
+// ends up widening an allowlist to everything at three in the morning.
+//
+// The prefix length is rebased by the 96 bits of the mapped range. A
+// prefix shorter than that covers more than the mapped range, so it is
+// left alone.
+func unmapPrefix(p netip.Prefix) netip.Prefix {
+	if !p.Addr().Is4In6() || p.Bits() < 96 {
+		return p
+	}
+	return netip.PrefixFrom(p.Addr().Unmap(), p.Bits()-96)
 }
 
 // Name reports the wrapped adapter's name unchanged: wrapping is a

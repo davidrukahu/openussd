@@ -154,7 +154,10 @@ func (in *Inbound) handle(ctx context.Context, log *slog.Logger, ev canonical.Ev
 	// what the previous one stored.
 	if sess.Tenant != "" && sess.Tenant != target.Name {
 		log.Info("dialogue handed to another tenant", "from", sess.Tenant, "to", target.Name)
-		sess.State = nil
+		// A clean slate means a clean turn count too: the protocol defines
+		// turn as screens served in this session starting at 1, and a
+		// tenant gating first-turn behaviour on it would never see it.
+		sess.State, sess.Turn = nil, 0
 	}
 	sess.Tenant = target.Name
 	sess.Turn++

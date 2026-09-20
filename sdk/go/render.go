@@ -61,9 +61,14 @@ func Shrink(s string) string {
 	return Truncate(string(runes[:lo+1]), lo)
 }
 
-// ellipsis marks a truncation. One rune, so it costs as little of the
-// budget as possible.
-const ellipsis = "…"
+// ellipsis marks a truncation.
+//
+// Three ASCII dots, not the single character "…". U+2026 is not in the GSM
+// 03.38 alphabet, so using it would re-encode every truncated screen as
+// UCS-2 and cut its capacity from 182 to 70. Saving two characters by
+// spending 112 is a bad trade, and it would make Truncate return strings
+// that the gateway then rejects.
+const ellipsis = "..."
 
 // maxWordLookback bounds how far Truncate will search backwards for a word
 // boundary. Roughly the length of a long word: far enough to avoid cutting
@@ -84,11 +89,15 @@ func Truncate(s string, limit int) string {
 	if len(runes) <= limit {
 		return s
 	}
-	if limit == 1 {
-		return ellipsis
+
+	// The marker has to fit inside the limit too. Below its width there is
+	// no room for both text and marker, so the limit is spent on dots.
+	marker := len([]rune(ellipsis))
+	if limit <= marker {
+		return strings.Repeat(".", limit)
 	}
 
-	cut := runes[:limit-1]
+	cut := runes[:limit-marker]
 
 	// The cut already lands on a word boundary when the next rune is a
 	// space, so there is nothing to back off from.

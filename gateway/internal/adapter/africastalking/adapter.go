@@ -66,6 +66,11 @@ func (a *Adapter) Name() string { return Name }
 // check. See the package comment - wrap this adapter in adapter.TrustedProxy.
 func (a *Adapter) Verify(*http.Request) error { return nil }
 
+// RequiresAllowlist reports true: with nothing signed and no secret sent,
+// anyone who reaches this endpoint can assert any subscriber's input, so
+// the gateway refuses to start it without a source allowlist.
+func (a *Adapter) RequiresAllowlist() bool { return true }
+
 // Parse decodes an Africa's Talking form POST into a canonical event.
 func (a *Adapter) Parse(r *http.Request) (canonical.Event, error) {
 	if r.Method != http.MethodPost {

@@ -273,3 +273,32 @@ func TestTrustedProxyReadsEveryForwardedForLine(t *testing.T) {
 		t.Fatalf("Verify: %v", err)
 	}
 }
+
+// TestNeedsAllowlist: whether an adapter may run without a source
+// allowlist is the adapter's own property, so a new non-authenticating
+// adapter is guarded the day it is written.
+func TestNeedsAllowlist(t *testing.T) {
+	if NeedsAllowlist(&stub{name: "says nothing"}) {
+		t.Error("an adapter that says nothing was treated as requiring an allowlist")
+	}
+	if !NeedsAllowlist(&requiresAllowlistStub{}) {
+		t.Error("an adapter that requires an allowlist was not recognised")
+	}
+}
+
+type requiresAllowlistStub struct{ stub }
+
+func (requiresAllowlistStub) RequiresAllowlist() bool { return true }
+
+// TestParsePrefixesUnmapsMappedForm: an entry written in IPv4-mapped IPv6
+// form used to match nothing at all, because peer addresses are unmapped.
+// It failed closed, and silently, which is how an operator ends up
+// widening an allowlist to everything at 3am.
+func TestParsePrefixesUnmapsMappedForm(t *testing.T) {
+	for _, entry := range []string{"::ffff:203.0.113.9", "::ffff:203.0.113.0/120"} {
+		tp := &TrustedProxy{Adapter: &stub{name: "x"}, Allowed: prefixes(t, entry)}
+		if err := tp.Verify(request("203.0.113.9:40000", "")); err != nil {
+			t.Errorf("allowlist entry %q did not match the host it names: %v", entry, err)
+		}
+	}
+}

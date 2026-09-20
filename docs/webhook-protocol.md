@@ -133,8 +133,15 @@ The `v1=` prefix versions the signature scheme independently of the payload
 version, so either can rotate without the other.
 
 **Replay:** the timestamp window bounds replay to 5 minutes but does not
-prevent it. There is no nonce yet. Make your turn handling idempotent, or
-deduplicate on `(event.session_id, turn)`, for anything with side effects.
+prevent it, and there is no nonce yet.
+
+Make anything with side effects idempotent at the application level, keyed
+on something your own handler decides, such as the state you are about to
+leave. Do not key on `(session_id, turn)`: `turn` is the gateway's own
+counter rather than anything the network sent, so a retried callback can
+arrive with a higher turn than the input it repeats, and a retry after a
+storage failure can arrive with the same turn as genuinely new input.
+Tightening this is tracked in the repository's TODOS.
 
 ## The MSISDN is a claim
 

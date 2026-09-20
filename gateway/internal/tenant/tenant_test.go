@@ -286,3 +286,54 @@ func TestDeliverAlwaysSendsPathAsAnArray(t *testing.T) {
 		}
 	}
 }
+
+// TestDeliverDoesNotFollowRedirects: the signature headers and, on 307 or
+// 308, the body carry a subscriber's number. Go does not strip our headers
+// across hosts, so a tenant with an open redirect could forward signed
+// events anywhere, including a cloud metadata endpoint.
+func TestDeliverDoesNotFollowRedirects(t *testing.T) {
+	var reached bool
+	elsewhere := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached = true
+		if r.Header.Get(webhook.HeaderSignature) != "" {
+			t.Error("the signature header followed the redirect")
+		}
+		_ = json.NewEncoder(w).Encode(webhook.Reply{Response: canonical.Continue("captured")})
+	}))
+	defer elsewhere.Close()
+
+	redirector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, elsewhere.URL, http.StatusTemporaryRedirect)
+	}))
+	defer redirector.Close()
+
+	tn := Tenant{Name: "redirecting", Shortcode: "*1#", WebhookURL: redirector.URL, Secret: "s"}
+	_, err := NewDispatcher(nil).Deliver(context.Background(), tn, webhook.Request{})
+
+	if reached {
+		t.Error("the gateway followed a tenant's redirect to another host")
+	}
+	if err == nil {
+		t.Error("a redirect was accepted as a valid reply")
+	}
+}
+
+// TestErrNoRouteOmitsUserInput: the error is logged, and a user's input
+// can include a PIN typed on an earlier screen.
+func TestErrNoRouteOmitsUserInput(t *testing.T) {
+	router, err := NewRouter([]Tenant{tenantFor("root")})
+	if err != nil {
+		t.Fatalf("NewRouter: %v", err)
+	}
+
+	_, _, err = router.Route(canonical.Event{Shortcode: "*999#", Path: []string{"1", "4321"}})
+	if err == nil {
+		t.Fatal("expected a routing error")
+	}
+	if strings.Contains(err.Error(), "4321") {
+		t.Errorf("error leaks user input into logs: %q", err)
+	}
+	if !strings.Contains(err.Error(), "depth 2") {
+		t.Errorf("error = %q, want the input depth", err)
+	}
+}

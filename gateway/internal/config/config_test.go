@@ -95,20 +95,6 @@ tenants:
 			wantErr: "no adapters enabled",
 		},
 		{
-			name: "africastalking without an allowlist",
-			body: `
-adapters:
-  africastalking:
-    enabled: true
-tenants:
-  - name: demo
-    shortcode: "*1#"
-    webhook_url: "http://x/ussd"
-    secret: "s"
-`,
-			wantErr: "would accept forged callbacks",
-		},
-		{
 			name: "redis backend without a url",
 			body: `
 session:
