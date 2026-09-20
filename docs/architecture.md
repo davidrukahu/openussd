@@ -52,7 +52,7 @@ This document describes how the three OpenUSSD components fit together: the **ga
             |  ┌──────────────────┐  |                |
             |  │ State machine    │  |                |
             |  │ Session types    │  |                |
-            |  │ i18n / 182-char  │  |                |
+            |  │ i18n / budget    │  |                |
             |  └──────────────────┘  |                |
             +-----------|------------+                |
                         |                             |
@@ -83,7 +83,9 @@ Core primitives:
 
 - **`Session`** — typed value object exposing the user's MSISDN, language, tenant, and an application-defined state struct. The SDK persists state back to the gateway on each turn.
 - **`State` / `Screen`** — a state machine. Each state declares the prompt to render, the input it accepts, and the transitions it allows. Inputs are validated before transitioning; invalid input re-renders the same screen with an error.
-- **`Render`** — helpers for the 182-character budget: `Truncate`, `Paginate`, `Menu`, with i18n bundles (Swahili, French, English at launch). Rendered output is character-counted at compile time where possible and at runtime as a guard.
+- **`Render`** — helpers for the per-screen budget: `Truncate`, `Paginate`, `Menu`, `MenuFit`, `Shrink`, with i18n bundles (Swahili, French, English at launch). Rendered output is measured at runtime as a guard.
+
+  The budget is not a single number. GSM 03.38 packs 182 septets into a USSD string, but any character outside that alphabet — an emoji, a Chinese character, a curly quote — re-encodes the whole screen as UCS-2, where the limit is 70 units. The SDK measures cost in the encoding the text itself forces, and offers `ToGSM` to transliterate where the trade is worth making: a menu of fediverse display names is worth more than the emoji in them, while a post written in Chinese is not worth anything transliterated, so it simply paginates further.
 - **`Auth`** — opt-in PIN and OTP flows. Documents the spoofing risks of trusting MNO-supplied MSISDNs and gives vetted defaults.
 
 Out of scope for v1: visual flow builders, IVR, WhatsApp.

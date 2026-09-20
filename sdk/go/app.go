@@ -172,7 +172,7 @@ func (a *App[S]) Turn(ev canonical.Event, turn int, stored json.RawMessage) (can
 		if body == "" {
 			body = ctx.T("session.ended")
 		}
-		return canonical.End(Truncate(body, MaxScreen)), nil, nil
+		return canonical.End(Shrink(body)), nil, nil
 	}
 
 	next := current
@@ -197,10 +197,12 @@ func (a *App[S]) render(ctx *Context[S], screen Screen[S], prefix string, st *st
 		body = prefix + "\n" + body
 	}
 
-	// Enforce the budget here rather than trusting each screen. A gateway
-	// rejecting an over-long screen shows the user an error; truncating it
-	// shows them most of their menu.
-	body = Truncate(body, MaxScreen)
+	// Enforce the budget here rather than trusting each screen, and
+	// measure it in the encoding the text itself forces: a screen of emoji
+	// holds 70 units, not 182 characters. A gateway rejecting an over-long
+	// screen shows the user an error; shrinking it shows them most of
+	// their menu.
+	body = Shrink(body)
 
 	st.Screen = screen.Name
 	st.Lang = ctx.Lang

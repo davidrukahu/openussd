@@ -3,7 +3,8 @@
 Build a USSD application as a set of screens. The SDK handles what every
 USSD app otherwise rewrites: verifying the gateway's signature, decoding
 the canonical event, tracking which screen the user is on, persisting typed
-state between turns, and keeping every screen inside 182 characters.
+state between turns, and keeping every screen inside what the network will
+actually carry.
 
 ```go
 import openussd "github.com/davidrukahu/openussd/sdk/go"
@@ -72,11 +73,21 @@ path, so a user never loses their place over a typo.
 into the gateway's opaque blob after each turn and decoded before the next.
 Corrupt state restarts the dialogue rather than killing it.
 
-**The budget.** `Truncate`, `Paginate`, `Menu` and `MenuFit` all work in
-runes against the 182-character limit, and every rendered screen is
-truncated as a backstop. Use `MenuFit` whenever an option must stay
-reachable — it renders the footer first, so a long list cannot push "Back"
-off the screen. `Fits` is there for your own tests.
+**The budget.** A screen holds 182 characters in the GSM 03.38 alphabet —
+and 70 units the moment it contains anything else, because one emoji or one
+Chinese character re-encodes the whole string as UCS-2. `Truncate`,
+`Paginate`, `Menu`, `MenuFit` and `Shrink` measure against the encoding the
+text itself forces, and every rendered screen passes through `Shrink` as a
+backstop. `Fits` is there for your own tests.
+
+Use `MenuFit` whenever an option must stay reachable: it renders the footer
+first, so a long list cannot push "Back" off the screen.
+
+Use `ToGSM` or `Label` where the trade is worth making. A menu of display
+names loses nothing important by dropping emoji, and gains most of its
+options back — one emoji in one name can cut a ten-option list to one.
+A post body is the opposite case: transliterating away a message written in
+Chinese leaves nothing to read, so let it paginate instead.
 
 **Languages.** `NewBundle` holds per-language strings; `Context.T` resolves
 one, falling back to the bundle's fallback language and then to the key

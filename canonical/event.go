@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-// MaxBodyLen is the number of characters a single USSD screen may carry.
-// The GSM 03.38 7-bit alphabet packs 182 septets into a USSD string; anything
-// longer is truncated or rejected by the network, not by us.
-const MaxBodyLen = 182
-
 // Phase normalises the session lifecycle. MNOs express this differently —
 // Safaricom infers "new" from an empty input field, MTN sends an explicit
 // type code — so adapters map their native signal onto this enum.
@@ -114,7 +109,8 @@ func (e Event) Validate() error {
 // Response is the reply to one Event, before it is serialised into an
 // MNO-native wire format by the adapter that produced the Event.
 type Response struct {
-	// Body is the text shown on the handset. Must be <= MaxBodyLen runes.
+	// Body is the text shown on the handset. It must fit one screen; see
+	// Budget, whose size depends on the encoding the text itself forces.
 	Body string `json:"body"`
 	// EndSession closes the dialogue: adapters render this as the network's
 	// terminating form (Africa's Talking "END", others differ).
@@ -131,8 +127,9 @@ func End(body string) Response { return Response{Body: body, EndSession: true} }
 // an over-long screen fails in our logs rather than being silently mangled by
 // the network.
 func (r Response) Validate() error {
-	if n := len([]rune(r.Body)); n > MaxBodyLen {
-		return fmt.Errorf("canonical: response body is %d chars, limit is %d", n, MaxBodyLen)
+	if cost, enc := ScreenCost(r.Body); !FitsScreen(r.Body) {
+		return fmt.Errorf("canonical: response body costs %d %s units, limit is %d",
+			cost, enc, Budget(r.Body))
 	}
 	return nil
 }

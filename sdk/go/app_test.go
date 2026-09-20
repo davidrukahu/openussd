@@ -62,18 +62,6 @@ func pinApp(t *testing.T) *App[pinState] {
 	return app
 }
 
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var out []byte
-	for n > 0 {
-		out = append([]byte{byte('0' + n%10)}, out...)
-		n /= 10
-	}
-	return string(out)
-}
-
 // driver replays a dialogue against an app the way the gateway would.
 type driver struct {
 	t     *testing.T

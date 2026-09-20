@@ -15,8 +15,47 @@ import (
 	"github.com/davidrukahu/openussd/canonical"
 )
 
-// MaxScreen is the character budget for one USSD screen.
-const MaxScreen = canonical.MaxBodyLen
+// MaxScreen is the character budget for a screen written in the GSM 03.38
+// alphabet — the number every USSD document quotes.
+//
+// It is not the budget for every screen. Text containing anything outside
+// that alphabet — an emoji, a Chinese character, a curly quote — is sent
+// as UCS-2, where a screen holds 70 units rather than 182. Content from
+// the federated web is full of such characters, so the helpers here
+// measure with canonical.ScreenCost against canonical.Budget rather than
+// counting runes against this constant.
+const MaxScreen = canonical.MaxSeptets
+
+// Shrink trims s until it fits one screen in whatever encoding its own
+// content forces, breaking at a word boundary where it can.
+//
+// This is the backstop every rendered screen passes through. A screen the
+// network would reject shows the user nothing; a shortened one shows them
+// most of what they asked for.
+func Shrink(s string) string {
+	if canonical.FitsScreen(s) {
+		return s
+	}
+
+	runes := []rune(s)
+	// Binary search the longest prefix that still fits once the ellipsis
+	// is added. Prefix cost is not linear in rune count — one emoji can
+	// change the encoding of the whole string — so it is measured, not
+	// estimated.
+	lo, hi := 0, len(runes)
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if canonical.FitsScreen(string(runes[:mid]) + ellipsis) {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	if lo == 0 {
+		return ""
+	}
+	return Truncate(string(runes[:lo+1]), lo)
+}
 
 // ellipsis marks a truncation. One rune, so it costs as little of the
 // budget as possible.
@@ -62,16 +101,22 @@ func Truncate(s string, limit int) string {
 	return string(cut) + ellipsis
 }
 
-// Paginate splits body into pages that fit the remaining budget once
-// reserve characters are set aside for navigation controls.
+// Paginate splits body into pages that each fit one screen once reserve
+// units are set aside for a header and navigation controls.
+//
+// Reserve is counted in units of the page's own encoding, so a page of
+// emoji gets fewer characters than a page of Latin text, which is what the
+// network will actually carry.
 //
 // Splitting prefers paragraph breaks, then line breaks, then word
 // boundaries, so a page rarely ends mid-sentence. A single word longer than
 // a page is split rather than dropped: a URL is more useful broken than
 // absent.
 func Paginate(body string, reserve int) []string {
-	budget := MaxScreen - reserve
-	if budget <= 0 {
+	if reserve >= canonical.MaxUCS2Units && canonical.EncodingOf(body) == canonical.EncodingUCS2 {
+		return nil
+	}
+	if reserve >= MaxScreen {
 		return nil
 	}
 
@@ -80,24 +125,54 @@ func Paginate(body string, reserve int) []string {
 
 	for remaining != "" {
 		runes := []rune(remaining)
-		if len(runes) <= budget {
+		fit := fitRunes(remaining, reserve)
+		if fit >= len(runes) {
 			pages = append(pages, remaining)
 			break
 		}
+		if fit == 0 {
+			// Not even one character fits beside the reserve. Better to
+			// stop than to loop producing empty pages.
+			break
+		}
 
-		window := string(runes[:budget])
+		window := string(runes[:fit])
 		cut := breakPoint(window)
 		page := strings.TrimRightFunc(string([]rune(window)[:cut]), unicode.IsSpace)
 		if page == "" {
 			// No usable break: hard-split so we always make progress.
 			page = window
-			cut = budget
+			cut = fit
 		}
 
 		pages = append(pages, page)
 		remaining = strings.TrimLeftFunc(string(runes[cut:]), unicode.IsSpace)
 	}
 	return pages
+}
+
+// fitRunes returns how many leading runes of s fit a screen alongside
+// reserve units, measured rather than estimated because one character can
+// change the encoding, and therefore the capacity, of the whole prefix.
+func fitRunes(s string, reserve int) int {
+	runes := []rune(s)
+
+	fits := func(n int) bool {
+		prefix := string(runes[:n])
+		cost, _ := canonical.ScreenCost(prefix)
+		return cost+reserve <= canonical.Budget(prefix)
+	}
+
+	lo, hi := 0, len(runes)
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if fits(mid) {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	return lo
 }
 
 // breakPoint returns the rune index to split a full window at, preferring
@@ -115,6 +190,35 @@ func breakPoint(window string) int {
 		}
 	}
 	return len(runes)
+}
+
+// minLabelRunes is the shortest label worth rendering. Below this a menu
+// line says nothing, so the option is dropped instead.
+const minLabelRunes = 4
+
+// longestLabelThatFits binary-searches the longest truncation of label
+// whose menu line still fits alongside what has already been rendered.
+// It returns "" when nothing worth showing fits.
+func longestLabelThatFits(rendered, key, label string) string {
+	runes := []rune(label)
+
+	fits := func(n int) bool {
+		return canonical.FitsScreen(rendered + "\n" + key + ". " + Truncate(label, n))
+	}
+
+	lo, hi := 0, len(runes)
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if fits(mid) {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	if lo < minLabelRunes {
+		return ""
+	}
+	return Truncate(label, lo)
 }
 
 // MenuItem is one selectable line.
@@ -141,13 +245,14 @@ func Menu(title string, items []MenuItem) string {
 
 	for _, item := range items {
 		line := "\n" + item.Key + ". " + item.Label
-		if len([]rune(b.String()))+len([]rune(line)) > MaxScreen {
-			// Try the line with its label truncated to whatever is left.
-			left := MaxScreen - len([]rune(b.String())) - len([]rune("\n"+item.Key+". "))
-			if left < 4 {
+		if !canonical.FitsScreen(b.String() + line) {
+			// Shorten the label to the most that still fits. A shortened
+			// option is still selectable; a dropped one is not.
+			label := longestLabelThatFits(b.String(), item.Key, item.Label)
+			if label == "" {
 				break
 			}
-			line = "\n" + item.Key + ". " + Truncate(item.Label, left)
+			line = "\n" + item.Key + ". " + label
 		}
 		b.WriteString(line)
 	}
@@ -168,11 +273,10 @@ func MenuFit(title string, items, footer []MenuItem) (string, int) {
 		footerText += "\n" + item.Key + ". " + item.Label
 	}
 
-	budget := MaxScreen - len([]rune(footerText))
-	if budget <= 0 {
-		// A footer that fills the screen on its own is a programming
-		// error, but truncating it beats returning nothing.
-		return Truncate(strings.TrimPrefix(footerText, "\n"), MaxScreen), 0
+	if !canonical.FitsScreen(title + footerText) {
+		// A title and footer that fill a screen between them is a
+		// programming error, but shrinking beats returning nothing.
+		return Shrink(title + footerText), 0
 	}
 
 	var b strings.Builder
@@ -181,7 +285,7 @@ func MenuFit(title string, items, footer []MenuItem) (string, int) {
 	shown := 0
 	for _, item := range items {
 		line := "\n" + item.Key + ". " + item.Label
-		if len([]rune(b.String()))+len([]rune(line)) > budget {
+		if !canonical.FitsScreen(b.String() + line + footerText) {
 			break
 		}
 		b.WriteString(line)
@@ -191,6 +295,7 @@ func MenuFit(title string, items, footer []MenuItem) (string, int) {
 	return b.String() + footerText, shown
 }
 
-// Fits reports whether s is within the screen budget. Applications call it
-// in tests; the SDK enforces it on every render regardless.
-func Fits(s string) bool { return len([]rune(s)) <= MaxScreen }
+// Fits reports whether s fits one screen in the encoding its own content
+// forces. Applications call it in tests; the SDK enforces it on every
+// render regardless.
+func Fits(s string) bool { return canonical.FitsScreen(s) }

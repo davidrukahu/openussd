@@ -4,7 +4,14 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/davidrukahu/openussd/canonical"
 )
+
+// canonicalCost and budgetOf keep the encoding details in one place for
+// the assertions below.
+func canonicalCost(s string) (int, canonical.Encoding) { return canonical.ScreenCost(s) }
+func budgetOf(s string) int                            { return canonical.Budget(s) }
 
 func TestTruncate(t *testing.T) {
 	tests := []struct {
@@ -169,5 +176,99 @@ func TestMenuFitShortListShowsEverything(t *testing.T) {
 	}
 	if got != "Title\n1. One\n2. Two\n0. Back" {
 		t.Errorf("screen = %q", got)
+	}
+}
+
+// TestEncodingAwareBudget is the constraint the project's own README gets
+// wrong if it only ever says "182 characters": one non-GSM character
+// re-encodes the whole screen as UCS-2, where the limit is 70 units.
+func TestEncodingAwareBudget(t *testing.T) {
+	latin := strings.Repeat("a", 182)
+	if !Fits(latin) {
+		t.Errorf("182 GSM characters should fit one screen")
+	}
+	if Fits(latin + "a") {
+		t.Errorf("183 GSM characters should not fit")
+	}
+
+	emoji := strings.Repeat("a", 100) + "🌍"
+	if Fits(emoji) {
+		t.Errorf("100 characters plus an emoji is UCS-2 and must not fit a 70-unit screen")
+	}
+
+	swahili := strings.Repeat("Habari ", 20)
+	if !Fits(swahili) {
+		t.Errorf("Swahili is in the GSM alphabet and should get the full screen")
+	}
+}
+
+func TestShrinkFitsEveryEncoding(t *testing.T) {
+	inputs := []string{
+		strings.Repeat("a", 500),
+		strings.Repeat("Habari yako ", 40),
+		strings.Repeat("🌍", 120),
+		strings.Repeat("台灣", 200),
+		"mixed " + strings.Repeat("text with émoji 🎉 ", 30),
+		"Tâi Siáu-káu 台痟狗 " + strings.Repeat("content ", 50),
+	}
+
+	for _, in := range inputs {
+		got := Shrink(in)
+		if !Fits(got) {
+			cost, enc := canonicalCost(got)
+			t.Errorf("Shrink(%.20q…) still costs %d %s units", in, cost, enc)
+		}
+		if got == "" {
+			t.Errorf("Shrink(%.20q…) returned nothing", in)
+		}
+	}
+}
+
+func TestShrinkLeavesFittingTextAlone(t *testing.T) {
+	in := "1. Timeline\n2. Quit"
+	if got := Shrink(in); got != in {
+		t.Errorf("Shrink() = %q, want the input unchanged", got)
+	}
+}
+
+// TestPaginateRespectsEncoding: an emoji-heavy post must produce more,
+// smaller pages, not pages the network will refuse.
+func TestPaginateRespectsEncoding(t *testing.T) {
+	reserve := 20
+	body := strings.Repeat("Habari 🌍 dunia nzima. ", 30)
+
+	pages := Paginate(body, reserve)
+	if len(pages) < 2 {
+		t.Fatalf("got %d pages, expected the body to split", len(pages))
+	}
+	for i, p := range pages {
+		cost, _ := canonicalCost(p)
+		if !Fits(p) || cost+reserve > budgetOf(p) {
+			t.Errorf("page %d costs %d units plus %d reserve, over budget", i, cost, reserve)
+		}
+	}
+}
+
+func TestMenuFitsWithNonLatinLabels(t *testing.T) {
+	items := make([]MenuItem, 0, 10)
+	for i := 1; i <= 10; i++ {
+		items = append(items, MenuItem{Key: itoa(i), Label: "Tâi Siáu-káu 台痟狗 ㄊㄇㄉ 🇳🇫 台灣國"})
+	}
+
+	plain := Menu("Latest posts", items)
+	if !Fits(plain) {
+		cost, enc := canonicalCost(plain)
+		t.Errorf("Menu with UCS-2 labels costs %d %s units", cost, enc)
+	}
+
+	withFooter, shown := MenuFit("Latest posts", items, []MenuItem{{Key: "0", Label: "Quit"}})
+	if !Fits(withFooter) {
+		t.Errorf("MenuFit with UCS-2 labels does not fit: %q", withFooter)
+	}
+	if !strings.HasSuffix(withFooter, "\n0. Quit") {
+		t.Errorf("screen = %q, want the footer kept", withFooter)
+	}
+	if shown < 1 {
+		t.Errorf("shown = %d, want at least one option", shown)
 	}
 }

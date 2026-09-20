@@ -47,7 +47,7 @@ type Event struct {
 }
 
 type Response struct {
-    Body     string   // ≤182 chars after rendering
+    Body     string   // must fit one screen; see note on encoding below
     EndSession bool   // true => USSD "END", false => "CON"
 }
 ```
@@ -139,6 +139,23 @@ the wrapped `Verify`. Three reasons it beat a flag:
 An empty allowlist rejects everything rather than accepting everything, and
 the gateway refuses to start with Africa's Talking enabled and no
 allowlist configured.
+
+### Correction: the screen budget is not one number
+
+This RFC originally wrote `Body string // ≤182 chars`. That is right only
+for text in the GSM 03.38 alphabet. One character outside it re-encodes the
+whole string as UCS-2, where a screen holds **70** 16-bit units — and an
+emoji outside the Basic Multiplane costs two of them.
+
+`canonical.ScreenCost` reports the cost and the encoding it forces,
+`canonical.Budget` the capacity available to that string, and
+`Response.Validate` compares the two. The SDK measures with these rather
+than counting runes.
+
+This matters more for this project than for most: the reference adapter
+renders content from the federated web, where emoji and non-Latin scripts
+are the norm rather than the exception, and a naive 182 would have produced
+screens the network refuses.
 
 ### Still open
 

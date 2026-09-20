@@ -58,6 +58,15 @@ stay out of the file.
 | `/healthz` | Liveness. Checks nothing external on purpose: a liveness probe that fails when Redis is down restarts a gateway that was working. |
 | `/readyz` | Readiness, plus the adapters and tenants actually loaded. |
 
+## Screen budget
+
+A screen is not simply "182 characters". GSM 03.38 packs 182 septets, but
+one character outside that alphabet re-encodes the whole screen as UCS-2,
+where the limit is 70 units. The gateway rejects a tenant response that
+does not fit the encoding its own text forces, and says which encoding it
+measured, so an operator sees the real constraint in the logs rather than a
+mangled screen on a handset.
+
 ## Session handling
 
 Sessions are keyed by `(mno, session_id)` and expire 180s after the last

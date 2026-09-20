@@ -1,9 +1,9 @@
 // Command ussdsim is a terminal handset for a local OpenUSSD gateway.
 //
 // It dials a shortcode against the gateway's simulator endpoint and reads
-// back screens the way a feature phone would, including the 182-character
-// limit — so a screen that would be unreadable on a handset is unreadable
-// here too.
+// back screens the way a feature phone would, flagging any screen that
+// exceeds what the network would carry — so a screen that would be
+// unreadable on a handset is unreadable here too.
 //
 // It exists so the project can be demonstrated without a telco account, a
 // sandbox registration, or an inbound tunnel: clone, `docker compose up`,
@@ -141,8 +141,10 @@ func draw(body string, ended bool) {
 	}
 	fmt.Println(border)
 
-	if n := len([]rune(body)); n > canonical.MaxBodyLen {
-		fmt.Printf("!! %d characters: a real network would reject this screen\n", n)
+	if !canonical.FitsScreen(body) {
+		cost, enc := canonical.ScreenCost(body)
+		fmt.Printf("!! %d %s units, budget is %d: a real network would reject this screen\n",
+			cost, enc, canonical.Budget(body))
 	}
 	if ended {
 		fmt.Println("(session ended)")

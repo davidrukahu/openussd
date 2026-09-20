@@ -165,7 +165,13 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 			for i, p := range c.State.Posts {
 				// Author and age first: they are what makes a one-line
 				// preview worth selecting.
-				label := openussd.Truncate(p.Author, maxHeaderLen)
+				//
+				// Labels are forced into the GSM alphabet. Display names
+				// on the fediverse are full of emoji, and one of them
+				// re-encodes the whole menu as UCS-2, cutting a ten-post
+				// list to one or two entries. The emoji is not worth the
+				// other eight posts.
+				label := openussd.Label(p.Author, maxHeaderLen, "Post "+strconv.Itoa(i+1))
 				if p.When != "" {
 					label += " (" + p.When + ")"
 				}
@@ -239,19 +245,31 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 	return app.WithBundle(bundle), nil
 }
 
-// navReserve is the space kept aside on every post screen for the header
-// and the navigation footer, so pagination never overruns the budget.
-const navReserve = 60
-
-// maxHeaderLen bounds the author line on a post screen. navReserve budgets
-// for this plus the navigation footer.
+// maxHeaderLen bounds the author line on a post screen, so a long display
+// name cannot crowd out the post itself.
 const maxHeaderLen = 28
+
+// worstCaseNav is the longest navigation footer a post screen can carry.
+// Pagination reserves room for it rather than for whichever controls this
+// particular page happens to show, so a page does not overflow the moment
+// a Prev control appears on it.
+const worstCaseNav = "1. Next 2. Prev 0. Back"
 
 func postPages(c *openussd.Context[state]) []string {
 	if c.State.Cursor >= len(c.State.Posts) {
 		return nil
 	}
-	return openussd.Paginate(c.State.Posts[c.State.Cursor].Text, navReserve)
+
+	post := c.State.Posts[c.State.Cursor]
+
+	// The reserve is measured from the real header and footer rather than
+	// guessed at with a constant. Both are GSM-safe, so their cost in
+	// runes equals their cost in either encoding's units, and the
+	// arithmetic holds whichever encoding the post body forces.
+	header := postHeader(post, 99, 99)
+	reserve := len([]rune(header)) + len([]rune(worstCaseNav)) + 2
+
+	return openussd.Paginate(post.Text, reserve)
 }
 
 // renderPost shows one page of a post with only the controls that lead
@@ -266,14 +284,7 @@ func renderPost(c *openussd.Context[state]) string {
 		c.State.Page = len(pages) - 1
 	}
 
-	p := c.State.Posts[c.State.Cursor]
-	// The header is bounded so a long display name cannot push the
-	// navigation controls off the bottom of the screen: a user who cannot
-	// see "0. Back" is stuck.
-	header := openussd.Truncate(p.Author, maxHeaderLen)
-	if len(pages) > 1 {
-		header += fmt.Sprintf(" (%d/%d)", c.State.Page+1, len(pages))
-	}
+	header := postHeader(c.State.Posts[c.State.Cursor], c.State.Page+1, len(pages))
 
 	nav := []string{}
 	if c.State.Page < len(pages)-1 {
@@ -284,7 +295,21 @@ func renderPost(c *openussd.Context[state]) string {
 	}
 	nav = append(nav, c.T("nav.back"))
 
-	return header + "\n" + pages[c.State.Page] + "\n" + strings.Join(nav, " ")
+	return header + "\n" + pages[c.State.Page] + "\n" + openussd.ToGSM(strings.Join(nav, " "))
+}
+
+// postHeader renders the author line, bounded and GSM-safe.
+//
+// Bounded so a long display name cannot push the navigation controls off
+// the bottom of the screen — a user who cannot see "0. Back" is stuck —
+// and GSM-safe so the header never spends the screen's capacity on an
+// emoji in someone's display name.
+func postHeader(p Post, page, pages int) string {
+	header := openussd.Label(p.Author, maxHeaderLen, "Post")
+	if pages > 1 {
+		header += fmt.Sprintf(" (%d/%d)", page, pages)
+	}
+	return header
 }
 
 func envOr(key, fallback string) string {

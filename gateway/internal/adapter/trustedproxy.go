@@ -39,6 +39,9 @@ type TrustedProxy struct {
 	Forwarders []netip.Prefix
 }
 
+// Prefix is a source range an adapter may be restricted to.
+type Prefix = netip.Prefix
+
 // ParsePrefixes converts CIDR strings, or bare addresses, into prefixes.
 // A bare address is treated as a single-host prefix.
 func ParsePrefixes(in []string) ([]netip.Prefix, error) {

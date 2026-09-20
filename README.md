@@ -19,7 +19,7 @@ OpenUSSD treats feature-phone users as a legitimate audience for the open web ra
 Three components, developed in this monorepo:
 
 1. **Gateway** — a self-hostable service that speaks USSD and SMS protocols and exposes a clean HTTP webhook interface to application developers. Multi-tenant. Telco-adapter abstraction over Safaricom, MTN, Airtel, and others.
-2. **SDK** — libraries (Go, TypeScript) for building USSD applications as state machines, with typed sessions, multi-language support, and built-in handling of the 182-character-per-screen constraint.
+2. **SDK** — libraries (Go, TypeScript) for building USSD applications as state machines, with typed sessions, multi-language support, and built-in handling of the per-screen character limit — 182 in the GSM alphabet, but only 70 the moment a screen contains an emoji or a non-Latin script, which content from the federated web constantly does.
 3. **Fediverse adapter** — a reference adapter that exposes ActivityPub-compatible Fediverse content (Mastodon timelines, PeerTube titles, PixelFed feeds) through USSD menus, demonstrating how the federated web can reach feature phones.
 
 See [`docs/architecture.md`](docs/architecture.md) for the high-level design and [`docs/rfcs/`](docs/rfcs/) for in-progress design notes.
@@ -51,8 +51,8 @@ Reply: 1
 
 No telco account, no sandbox registration, no inbound tunnel: `cmd/ussdsim`
 is a terminal handset that speaks to the gateway through a local adapter,
-including the 182-character screen limit, so a screen that would be
-unreadable on a real handset is unreadable here too.
+and it flags any screen a real network would refuse, so a screen that would
+be unreadable on a handset is unreadable here too.
 
 To dial from a real handset instead, enable the Africa's Talking adapter
 and point a sandbox USSD channel at `/ussd/africastalking` — see
@@ -69,7 +69,7 @@ read-only Fediverse adapter run end to end. What that means precisely:
 | Africa's Talking adapter, fixture-driven contract tests | A second real network (MTN) |
 | Session store: in-memory and Redis, 180s idle expiry | Postgres audit store |
 | Tenant routing with HMAC-signed webhooks | TypeScript SDK |
-| Go SDK: typed screens, state, i18n, 182-char budget | Fediverse write paths, identity binding ([#9](https://github.com/davidrukahu/openussd/issues/9)) |
+| Go SDK: typed screens, state, i18n, encoding-aware screen budget | Fediverse write paths, identity binding ([#9](https://github.com/davidrukahu/openussd/issues/9)) |
 | Mastodon public timeline over USSD, paginated | Independent security audit |
 
 Interfaces will break before v1.0. Follow the
