@@ -3,6 +3,7 @@
 > An open gateway and SDK for the feature-phone web.
 
 [![CI](https://github.com/davidrukahu/openussd/actions/workflows/ci.yml/badge.svg)](https://github.com/davidrukahu/openussd/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/davidrukahu/openussd/sdk/go.svg)](https://pkg.go.dev/github.com/davidrukahu/openussd/sdk/go)
 [![Release](https://img.shields.io/github/v/tag/davidrukahu/openussd?label=release)](https://github.com/davidrukahu/openussd/releases)
 [![Status](https://img.shields.io/badge/status-v0.1%20spike-orange)](#status)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
