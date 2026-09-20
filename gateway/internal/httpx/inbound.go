@@ -81,9 +81,12 @@ func (in *Inbound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Error("could not render response", "error", err)
 		return
 	}
+	cost, encoding := canonical.ScreenCost(resp.Body)
 	log.Info("served screen",
 		"end_session", resp.EndSession,
-		"chars", len([]rune(resp.Body)),
+		"cost", cost,
+		"encoding", string(encoding),
+		"budget", canonical.Budget(resp.Body),
 		"duration", time.Since(start))
 }
 
