@@ -12,18 +12,36 @@ Thank you for your interest in OpenUSSD. The project is in its planning phase; d
 
 1. Find an issue tagged [`good first issue`](https://github.com/davidrukahu/openussd/labels/good%20first%20issue) or [`help wanted`](https://github.com/davidrukahu/openussd/labels/help%20wanted), or open one to discuss your idea before writing a large patch.
 2. Fork, branch from `main`, and keep changes focused — one logical change per PR.
-3. Run the language-appropriate formatter, linter, and tests before pushing (commands will be documented per-package once each component lands).
+3. Run `make check` before pushing. Telco-adapter changes also need fixtures under `gateway/testdata/fixtures/<mno>/`, with their provenance recorded — a hand-written fixture proves the adapter is self-consistent, a captured one proves it matches the network.
 4. Open a PR using the template. Reference the issue it addresses.
 5. A maintainer reviews. Expect substantive feedback on protocol-touching changes; we would rather discuss a design twice than break compatibility later.
 
 ## Development setup
 
-Per-component setup will be documented in each subdirectory's README as it lands:
+Go 1.25 or newer, and Docker if you want the compose demo.
 
-- `gateway/` — Go service, Postgres, Redis (TBD)
-- `sdk/go/` — Go module
-- `sdk/typescript/` — pnpm workspace
-- `adapters/fediverse/` — Go (likely shares the gateway's HTTP plumbing)
+```bash
+git clone https://github.com/davidrukahu/openussd.git
+cd openussd
+make check      # formatting, vet, tests with the race detector
+make build      # binaries into bin/
+```
+
+To run the whole thing and dial it:
+
+```bash
+export FEDIVERSE_WEBHOOK_SECRET=$(openssl rand -hex 32)
+docker compose up --build
+go run ./cmd/ussdsim -shortcode '*384*1234#'
+```
+
+Per-component notes:
+
+- `gateway/` — Go service; [README](gateway/README.md) covers configuration and self-hosting. Redis is optional, needed only for more than one replica.
+- `sdk/go/` — Go module; [README](sdk/go/README.md) has a whole application in one snippet.
+- `adapters/fediverse/` — Go, built on the SDK. Needs `FEDIVERSE_WEBHOOK_SECRET` matching the gateway's tenant config.
+- `cmd/ussdsim/` — the terminal handset. No dependencies.
+- `sdk/typescript/` — not yet started (milestone M3).
 
 ## Coding standards
 

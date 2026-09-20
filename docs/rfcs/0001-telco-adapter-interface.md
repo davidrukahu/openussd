@@ -1,8 +1,8 @@
 # RFC 0001 — Telco adapter interface
 
-- **Status:** draft
+- **Status:** draft (implemented; see "Validated against a first implementation")
 - **Author:** David W
-- **Updated:** 2026-04-28
+- **Updated:** 2026-09-20
 
 ## Context
 
@@ -77,6 +77,76 @@ Each adapter ships with **fixture-driven contract tests**: a directory of `reque
 
 ## Next steps
 
-- Land Safaricom adapter against this interface to validate it.
-- Land MTN adapter and adjust the interface based on what didn't fit.
+- ~~Land Safaricom adapter against this interface to validate it.~~
+  Safaricom has no public USSD sandbox — Daraja is the M-Pesa portal, not a
+  USSD one. Landed an **Africa's Talking** adapter instead; see
+  [`docs/telco-access.md`](../telco-access.md).
+- Capture the Africa's Talking fixtures against the live sandbox, replacing
+  the hand-written ones.
+- Land a second real network — MTN via a country sandbox, or Africa's
+  Talking production — and adjust the interface based on what did not fit.
 - Promote RFC to *accepted* once two adapters and one production tenant ship without interface changes for one release cycle.
+
+## Validated against a first implementation (2026-09)
+
+The interface above has been implemented for two adapters — Africa's
+Talking and a local simulator — and a gateway that uses it end to end. What
+the exercise changed:
+
+**The interface held.** `Parse` / `Render` / `Verify` needed no new
+methods, and `Verify` running before `Parse` paid off immediately: the
+gateway can reject an unattributable request without allocating session
+state, and the handler reads in that order.
+
+**`Path []string` was the right call.** Africa's Talking sends the
+`*`-joined field the RFC anticipated. Splitting it in the adapter meant the
+tenant router could match sub-prefixes structurally, and the SDK's screens
+never see a separator. One detail the RFC did not state: an **empty
+segment is meaningful** — `1**3` is a user who pressed send on an empty
+prompt — so segments are preserved rather than filtered, and there is a
+fixture for it.
+
+**`Phase` needed a `Terminal()` helper, not more cases.** The four cases
+are right, but `Cancel` and `Timeout` share a property the gateway needs to
+branch on: no response will reach the handset. Africa's Talking never
+delivers either as a callback; the session simply stops. Those phases are
+synthesised by the session store on expiry, never produced by that adapter.
+
+**`Raw` earned its place.** It is what makes fixture capture a copy from
+the audit log rather than a packet-capture exercise. It is stripped before
+the event is forwarded to a tenant: keeping it would leak wire details the
+SDK exists to hide, and grow every webhook body.
+
+### Open question resolved: networks that authenticate nothing
+
+The RFC asked how `Verify` should express "this MNO does not authenticate;
+trust the IP allowlist instead", and leaned towards a wrapper over a flag.
+
+**Resolved as a wrapper.** `adapter.TrustedProxy` wraps an adapter, checks
+the effective client address against an allowlist, and then delegates to
+the wrapped `Verify`. Three reasons it beat a flag:
+
+1. The weakness is visible in the deployment wiring. Reading the config
+   shows which adapters are trusted on network position alone.
+2. It composes. Wrapping an adapter that *does* authenticate adds a second
+   gate rather than replacing the first.
+3. `X-Forwarded-For` handling has to live somewhere, and it is a
+   deployment concern, not a protocol one. The wrapper trusts the header
+   only from configured forwarder ranges, and takes the last hop those
+   forwarders did not set — the furthest right an attacker cannot forge by
+   prepending.
+
+An empty allowlist rejects everything rather than accepting everything, and
+the gateway refuses to start with Africa's Talking enabled and no
+allowlist configured.
+
+### Still open
+
+- **Outbound push** is still unmodelled. Nothing learned here argues
+  against the RFC's lean towards a separate `Pusher`.
+- **Per-segment timestamps** in `Path` were not missed. Leaving them out
+  for v1 looks correct.
+- **Two adapters is not two networks.** The simulator is ours, so it cannot
+  disagree with us. Promotion to *accepted* still needs a second real
+  network — and the Africa's Talking fixtures still need capturing against
+  the live sandbox rather than being written from the published shape.

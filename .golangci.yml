@@ -1,0 +1,23 @@
+# Linters for the Go tree. Deliberately close to the defaults: the project
+# is small enough that an opinionated ruleset would cost more review time
+# than it saves.
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - bodyclose
+    - errorlint
+
+  exclusions:
+    rules:
+      # Tests exercise failure paths deliberately and read better without
+      # a check on every teardown call.
+      - path: _test\.go
+        linters:
+          - errcheck

@@ -5,6 +5,10 @@
 // an example. A missing variable is an error rather than an empty string:
 // silently starting with an empty webhook secret is the failure mode this
 // package exists to prevent.
+//
+// Expansion happens on parsed values, not on the file's text. Substituting
+// before parsing is simpler but also blind to comments, so documenting the
+// syntax in a comment would make the file fail to load.
 package config
 
 import (
@@ -67,14 +71,21 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("config: reading %s: %w", path, err)
 	}
 
-	expanded, err := expandEnv(string(raw))
-	if err != nil {
-		return nil, fmt.Errorf("config: %s: %w", path, err)
+	var doc yaml.Node
+	if err := yaml.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("config: parsing %s: %w", path, err)
+	}
+
+	var missing []string
+	expandNode(&doc, &missing)
+	if len(missing) > 0 {
+		return nil, fmt.Errorf("config: %s: unset environment variables: %s",
+			path, strings.Join(missing, ", "))
 	}
 
 	var cfg Config
-	if err := yaml.Unmarshal([]byte(expanded), &cfg); err != nil {
-		return nil, fmt.Errorf("config: parsing %s: %w", path, err)
+	if err := doc.Decode(&cfg); err != nil {
+		return nil, fmt.Errorf("config: decoding %s: %w", path, err)
 	}
 
 	cfg.applyDefaults()
@@ -84,25 +95,25 @@ func Load(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-// expandEnv substitutes ${NAME} and reports every variable that is unset,
-// in one error rather than one per run.
-func expandEnv(in string) (string, error) {
-	var missing []string
-
-	out := envRef.ReplaceAllStringFunc(in, func(match string) string {
-		name := match[2 : len(match)-1]
-		val, ok := os.LookupEnv(name)
-		if !ok {
-			missing = append(missing, name)
-			return ""
-		}
-		return val
-	})
-
-	if len(missing) > 0 {
-		return "", fmt.Errorf("unset environment variables: %s", strings.Join(missing, ", "))
+// expandNode substitutes ${NAME} in every scalar value of the document,
+// collecting the names of unset variables so one run reports all of them
+// rather than one per restart.
+func expandNode(n *yaml.Node, missing *[]string) {
+	if n.Kind == yaml.ScalarNode {
+		n.Value = envRef.ReplaceAllStringFunc(n.Value, func(match string) string {
+			name := match[2 : len(match)-1]
+			val, ok := os.LookupEnv(name)
+			if !ok {
+				*missing = append(*missing, name)
+				return ""
+			}
+			return val
+		})
+		return
 	}
-	return out, nil
+	for _, child := range n.Content {
+		expandNode(child, missing)
+	}
 }
 
 func (c *Config) applyDefaults() {

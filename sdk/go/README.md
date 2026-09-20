@@ -1,0 +1,105 @@
+# OpenUSSD Go SDK
+
+Build a USSD application as a set of screens. The SDK handles what every
+USSD app otherwise rewrites: verifying the gateway's signature, decoding
+the canonical event, tracking which screen the user is on, persisting typed
+state between turns, and keeping every screen inside 182 characters.
+
+```go
+import openussd "github.com/davidrukahu/openussd/sdk/go"
+```
+
+> Licensed AGPL-3.0-or-later while it lives in this monorepo. It will be
+> re-licensed Apache-2.0 if it is split into its own module, so it can be
+> embedded without copyleft propagation.
+
+## A whole application
+
+```go
+type state struct{ Name string `json:"name"` }
+
+app, err := openussd.NewApp[state]("menu",
+    openussd.Screen[state]{
+        Name: "menu",
+        Prompt: func(c *openussd.Context[state]) (string, error) {
+            return openussd.Menu("Welcome", []openussd.MenuItem{
+                {Key: "1", Label: "Set name"},
+                {Key: "0", Label: "Quit"},
+            }), nil
+        },
+        Handle: func(c *openussd.Context[state], input string) (openussd.Action, error) {
+            switch input {
+            case "1":
+                return openussd.Goto("name")
+            case "0":
+                return openussd.Finish("Goodbye.")
+            default:
+                return openussd.Stay("Invalid choice.")
+            }
+        },
+    },
+    openussd.Screen[state]{
+        Name:   "name",
+        Prompt: func(c *openussd.Context[state]) (string, error) { return "Enter your name:", nil },
+        Handle: func(c *openussd.Context[state], input string) (openussd.Action, error) {
+            if strings.TrimSpace(input) == "" {
+                return openussd.Stay("Name cannot be empty.")
+            }
+            c.State.Name = input
+            return openussd.Goto("done")
+        },
+    },
+    openussd.Screen[state]{
+        // No Handle, so the dialogue ends with this screen displayed.
+        Name:   "done",
+        Prompt: func(c *openussd.Context[state]) (string, error) { return "Saved, " + c.State.Name + ".", nil },
+    },
+)
+
+http.Handle("/ussd", openussd.NewHandler(app, os.Getenv("WEBHOOK_SECRET"), nil))
+```
+
+## Concepts
+
+**Screens.** `Prompt` renders; `Handle` decides what happens next. A screen
+without `Handle` is terminal.
+
+**Actions.** `Goto` moves on, `Finish` ends the dialogue, and `Stay`
+re-renders the current screen with a message above it — the invalid-input
+path, so a user never loses their place over a typo.
+
+**State.** `Context.State` is a pointer to your own struct. It is encoded
+into the gateway's opaque blob after each turn and decoded before the next.
+Corrupt state restarts the dialogue rather than killing it.
+
+**The budget.** `Truncate`, `Paginate`, `Menu` and `MenuFit` all work in
+runes against the 182-character limit, and every rendered screen is
+truncated as a backstop. Use `MenuFit` whenever an option must stay
+reachable — it renders the footer first, so a long list cannot push "Back"
+off the screen. `Fits` is there for your own tests.
+
+**Languages.** `NewBundle` holds per-language strings; `Context.T` resolves
+one, falling back to the bundle's fallback language and then to the key
+itself, so a missing translation is visible in testing rather than blank in
+production.
+
+## Testing an application
+
+`App.Turn` takes an event, a turn number, and the stored state, and returns
+the screen and the new state. No HTTP, no gateway:
+
+```go
+resp, state, err := app.Turn(canonical.Event{
+    MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
+    Path: []string{"1"}, Phase: canonical.PhaseContinue,
+}, 2, previousState)
+```
+
+See [`app_test.go`](app_test.go) for a dialogue driver worth copying.
+
+## The MSISDN is a claim
+
+`Context.MSISDN()` returns what the network asserted. It is not an
+authenticated identity: anything that can reach the gateway's inbound
+endpoint can claim any number. Gate anything that matters behind a PIN or
+an OTP.

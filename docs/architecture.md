@@ -1,6 +1,9 @@
 # OpenUSSD architecture (sketch)
 
-> Status: **draft**, pre-implementation. Expect breaking changes until v0.1.
+> Status: **draft**, partially implemented as of 2026-09. The gateway, the
+> Go SDK, and a read-only Fediverse adapter exist and run end to end; see
+> the repository README for what is and is not built. Expect breaking
+> changes until v1.0.
 
 This document describes how the three OpenUSSD components fit together: the **gateway**, the **SDK**, and the reference **Fediverse adapter**. It is intentionally short and decision-oriented; each subsystem will get a deeper RFC under [`rfcs/`](rfcs/) before code lands.
 
@@ -117,14 +120,30 @@ License: AGPL-3.0-or-later.
 
 Year-1 targets:
 
-- **Safaricom Daraja USSD** (Kenya)
+- **Africa's Talking** (implemented) — an aggregator reaching Safaricom and
+  Airtel in Kenya, MTN and Airtel in Uganda, and several other markets from
+  one adapter. It is the only USSD sandbox obtainable without a commercial
+  agreement, which is why it is first.
+- **Safaricom direct** — requires a commercial shortcode agreement with a
+  registered Kenyan entity, so it belongs in the funded phase. Note that
+  Daraja, named in earlier drafts, is the M-Pesa API portal and exposes no
+  USSD. See [`telco-access.md`](telco-access.md).
 - **MTN USSD** (one of Uganda / Nigeria sandboxes — to be picked once sandbox access is confirmed)
 
 Architectural placeholder for SS7-level signaling exists but is out of scope for v1.
 
 ## Open questions (tracked in RFCs)
 
-1. Canonical session-event schema — see [`rfcs/0001-telco-adapter-interface.md`](rfcs/0001-telco-adapter-interface.md).
-2. Session-state encoding (CBOR vs JSON; size implications for Redis).
-3. ActivityPub identity binding flow — how do we prove the USSD user owns the Fediverse account they claim?
+1. ~~Canonical session-event schema~~ — implemented and validated against a
+   first adapter; see [`rfcs/0001-telco-adapter-interface.md`](rfcs/0001-telco-adapter-interface.md).
+   Still draft until a second real network lands.
+2. ~~Session-state encoding (CBOR vs JSON)~~ — **JSON, opaque to the
+   gateway**. Being able to read live state with `redis-cli` during an
+   incident beats CBOR's ~30% saving until Redis pressure is measurable,
+   and the codec seam remains for when it is ([#10](https://github.com/davidrukahu/openussd/issues/10)).
+3. ActivityPub identity binding flow — how do we prove the USSD user owns the Fediverse account they claim? Still open; the shipped adapter is read-only precisely because this is unresolved ([#9](https://github.com/davidrukahu/openussd/issues/9)).
 4. Whether PeerTube and PixelFed adapters are first-class in v1 or stretch goals.
+5. **New:** how should a shared shortcode render its first screen? The
+   router requires exactly one tenant per shortcode with an empty prefix to
+   answer it. A gateway-owned selection menu is the alternative, and that
+   is a product decision rather than a default.
