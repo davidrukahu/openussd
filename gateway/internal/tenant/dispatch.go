@@ -115,6 +115,8 @@ func (d *Dispatcher) Deliver(ctx context.Context, t Tenant, payload webhook.Requ
 	if err := json.Unmarshal(raw, &out); err != nil {
 		return webhook.Reply{}, fmt.Errorf("tenant %q: decoding reply: %w", t.Name, err)
 	}
+	out.State = webhook.NormaliseState(out.State)
+
 	if err := out.Response.Validate(); err != nil {
 		// The tenant broke the screen budget. Failing here means the
 		// operator sees it in gateway logs, rather than the user seeing a

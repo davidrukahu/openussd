@@ -220,7 +220,7 @@ func longestLabelThatFits(rendered, key, label string) string {
 	runes := []rune(label)
 
 	fits := func(n int) bool {
-		return canonical.FitsScreen(rendered + "\n" + key + ". " + Truncate(label, n))
+		return canonical.FitsScreen(rendered + MenuItem{Key: key, Label: Truncate(label, n)}.line())
 	}
 
 	lo, hi := 0, len(runes)
@@ -235,7 +235,7 @@ func longestLabelThatFits(rendered, key, label string) string {
 	if lo < minLabelRunes {
 		return ""
 	}
-	return Truncate(label, lo)
+	return OneLine(Truncate(label, lo))
 }
 
 // MenuItem is one selectable line.
@@ -243,8 +243,16 @@ type MenuItem struct {
 	// Key is what the user types. Usually a digit; "0" and "#" are
 	// conventional for back and next.
 	Key string
-	// Label is the text shown beside the key.
+	// Label is the text shown beside the key. Line breaks in it are
+	// collapsed when the menu renders: a label that could introduce a
+	// newline could introduce a fake option. See Label.
 	Label string
+}
+
+// line renders one menu row, with any line break in the label collapsed so
+// a single item cannot become two.
+func (m MenuItem) line() string {
+	return "\n" + OneLine(m.Key) + ". " + OneLine(m.Label)
 }
 
 // Menu renders a title and numbered options within the screen budget.
@@ -261,7 +269,7 @@ func Menu(title string, items []MenuItem) string {
 	}
 
 	for _, item := range items {
-		line := "\n" + item.Key + ". " + item.Label
+		line := item.line()
 		if !canonical.FitsScreen(b.String() + line) {
 			// Shorten the label to the most that still fits. A shortened
 			// option is still selectable; a dropped one is not.
@@ -269,7 +277,7 @@ func Menu(title string, items []MenuItem) string {
 			if label == "" {
 				break
 			}
-			line = "\n" + item.Key + ". " + label
+			line = MenuItem{Key: item.Key, Label: label}.line()
 		}
 		b.WriteString(line)
 	}
@@ -287,7 +295,7 @@ func MenuFit(title string, items, footer []MenuItem) (string, int) {
 	// Cost the footer first; it is not negotiable.
 	footerText := ""
 	for _, item := range footer {
-		footerText += "\n" + item.Key + ". " + item.Label
+		footerText += item.line()
 	}
 
 	if !canonical.FitsScreen(title + footerText) {
@@ -301,7 +309,7 @@ func MenuFit(title string, items, footer []MenuItem) (string, int) {
 
 	shown := 0
 	for _, item := range items {
-		line := "\n" + item.Key + ". " + item.Label
+		line := item.line()
 		if !canonical.FitsScreen(b.String() + line + footerText) {
 			break
 		}

@@ -176,3 +176,28 @@ func TestRequestCarriesItsVersion(t *testing.T) {
 		t.Errorf("request = %s, want an explicit version", body)
 	}
 }
+
+// TestNormaliseState: an absent key and an explicit null are documented as
+// equivalent, but only one of them decodes to a nil RawMessage.
+func TestNormaliseState(t *testing.T) {
+	var absent, explicit Reply
+	if err := json.Unmarshal([]byte(`{"response":{"body":"hi"}}`), &absent); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal([]byte(`{"response":{"body":"hi"},"state":null}`), &explicit); err != nil {
+		t.Fatal(err)
+	}
+
+	if explicit.State == nil {
+		t.Skip("encoding/json now decodes an explicit null to nil; the guard is redundant")
+	}
+	if got := NormaliseState(explicit.State); got != nil {
+		t.Errorf("explicit null normalised to %q, want nil", got)
+	}
+	if got := NormaliseState(absent.State); got != nil {
+		t.Errorf("absent state normalised to %q, want nil", got)
+	}
+	if got := NormaliseState(json.RawMessage(`{"screen":"menu"}`)); string(got) != `{"screen":"menu"}` {
+		t.Errorf("real state was altered: %q", got)
+	}
+}

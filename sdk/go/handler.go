@@ -78,7 +78,7 @@ func (h *Handler[S]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, state, err := h.app.Turn(r.Context(), req.Event, req.Turn, req.State)
+	resp, state, err := h.app.Turn(r.Context(), req.Event, req.Turn, webhook.NormaliseState(req.State))
 	if err != nil {
 		// Returning 500 lets the gateway render its own failure screen,
 		// which is a better user experience than this application guessing

@@ -81,3 +81,46 @@ func itoa(n int) string {
 	}
 	return string(out)
 }
+
+// TestLabelCannotInjectAMenuLine is a security property, not tidiness. A
+// menu is lines of "key. label" and the user answers with a key, so text
+// that can introduce a newline can introduce a fake option. Display names
+// on the fediverse are attacker-controlled.
+func TestLabelCannotInjectAMenuLine(t *testing.T) {
+	hostile := []string{
+		"Safaricom\n1. Free airtime, press 1",
+		"Bank\r\n2. Verify your PIN",
+		"Name\tcolumns",
+		"Multi\n\n\nbreak",
+	}
+
+	for _, name := range hostile {
+		got := Label(name, 40, "Post")
+		if strings.ContainsAny(got, "\n\r\t") {
+			t.Errorf("Label(%q) = %q, still carries a line break", name, got)
+		}
+
+		screen := Menu("Latest posts", []MenuItem{{Key: "1", Label: got}})
+		if lines := strings.Count(screen, "\n"); lines != 1 {
+			t.Errorf("one item rendered %d lines from %q:\n%s", lines+1, name, screen)
+		}
+	}
+}
+
+// TestMenuCollapsesBreaksInRawLabels: callers should use Label, but a menu
+// must not be injectable by one that forgets.
+func TestMenuCollapsesBreaksInRawLabels(t *testing.T) {
+	raw := MenuItem{Key: "1", Label: "Safaricom\n1. Free airtime, press 1"}
+
+	for name, screen := range map[string]string{
+		"Menu": Menu("Title", []MenuItem{raw}),
+		"MenuFit": func() string {
+			s, _ := MenuFit("Title", []MenuItem{raw}, []MenuItem{{Key: "0", Label: "Quit"}})
+			return s
+		}(),
+	} {
+		if strings.Count(screen, "\n1. ") > 1 {
+			t.Errorf("%s rendered an injected option:\n%s", name, screen)
+		}
+	}
+}

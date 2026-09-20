@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/davidrukahu/openussd/canonical"
@@ -32,6 +33,21 @@ type Request struct {
 	// State is whatever the tenant returned last turn, verbatim. Null on
 	// the first turn of a session, and after a tenant clears it.
 	State json.RawMessage `json:"state,omitempty"`
+}
+
+// NormaliseState collapses the two ways a JSON document says "no state"
+// into one.
+//
+// An absent key decodes to a nil RawMessage, but an explicit null decodes
+// to the four bytes "null", which is not nil. The protocol documents the
+// two as equivalent, so without this a tenant that sends "state": null
+// would have the literal null stored as its state and handed back next
+// turn.
+func NormaliseState(state json.RawMessage) json.RawMessage {
+	if len(state) == 0 || bytes.Equal(bytes.TrimSpace(state), []byte("null")) {
+		return nil
+	}
+	return state
 }
 
 // Reply is the JSON body a tenant returns.
