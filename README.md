@@ -109,6 +109,18 @@ Indicative 12-month plan from project kickoff:
 
 Still planned: `sdk/typescript/`, further telco adapters, `examples/`.
 
+## Installing
+
+Docker Compose is the supported path today, and building from source needs
+only a Go toolchain:
+
+```bash
+go install github.com/davidrukahu/openussd/gateway/cmd/gateway@latest
+```
+
+There is no release pipeline yet, so no prebuilt binaries. It is tracked in
+[TODOS.md](TODOS.md).
+
 ## License
 
 The gateway and Fediverse adapter are licensed under [AGPL-3.0-or-later](LICENSE). The SDK packages will be re-licensed under Apache-2.0 if/when split into their own repositories so they can be embedded in applications without copyleft propagation; for as long as everything lives in this monorepo the whole tree is AGPL-3.0. Documentation is CC BY-SA 4.0.
