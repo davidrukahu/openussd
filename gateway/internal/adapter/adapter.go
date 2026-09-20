@@ -26,8 +26,8 @@ type Adapter interface {
 	// routing, metrics, and fixture directories. Lowercase, no spaces.
 	Name() string
 
-	// Verify checks whatever authenticity signal the MNO offers — shared
-	// secret, signature, mTLS, or source address — and returns ErrUntrusted
+	// Verify checks whatever authenticity signal the MNO offers - shared
+	// secret, signature, mTLS, or source address - and returns ErrUntrusted
 	// if the request should not be processed. It runs before Parse so an
 	// unauthentic request never allocates session state.
 	//

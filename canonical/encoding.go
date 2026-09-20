@@ -6,7 +6,7 @@ import "unicode/utf16"
 // the same capacity.
 //
 // GSM 03.38 packs 7-bit septets, giving 182 of them in a USSD string. A
-// handful of characters — ^ { } [ ] ~ | € — are not in the basic table and
+// handful of characters - ^ { } [ ] ~ | € - are not in the basic table and
 // are sent as a two-septet escape sequence, so they cost double.
 //
 // Anything outside that alphabet forces the whole string to UCS-2, where
@@ -18,7 +18,7 @@ const (
 	// MaxSeptets is the capacity of a GSM 03.38 encoded screen.
 	MaxSeptets = 182
 	// MaxUCS2Units is the capacity of a UCS-2 encoded screen, counted in
-	// 16-bit units — so a character outside the Basic Multilingual Plane,
+	// 16-bit units - so a character outside the Basic Multilingual Plane,
 	// such as most emoji, costs two.
 	MaxUCS2Units = 70
 )

@@ -15,7 +15,7 @@ import (
 //
 // This answers the open question in RFC-0001: rather than giving Adapter a
 // "this network does not authenticate" flag, the weakness is made explicit in
-// the configuration — you can see from the wiring which adapters are trusted
+// the configuration - you can see from the wiring which adapters are trusted
 // on network position alone.
 //
 // Source-address trust is weak. It holds only while nothing else can reach
@@ -33,7 +33,7 @@ type TrustedProxy struct {
 	// allowlist is safer than silently accepting the internet.
 	Allowed []netip.Prefix
 
-	// Forwarders lists ranges that are permitted to set X-Forwarded-For —
+	// Forwarders lists ranges that are permitted to set X-Forwarded-For -
 	// your own load balancer or ingress. When empty, X-Forwarded-For is
 	// ignored entirely and only the direct peer address is considered.
 	Forwarders []netip.Prefix
@@ -97,7 +97,7 @@ func (t *TrustedProxy) Verify(r *http.Request) error {
 
 // clientAddr resolves the address to test against the allowlist. The direct
 // peer is used unless it is a configured forwarder, in which case the last
-// non-forwarder entry in X-Forwarded-For is used — the closest hop the
+// non-forwarder entry in X-Forwarded-For is used - the closest hop the
 // forwarder actually observed, and the furthest right an attacker cannot
 // forge by prepending entries.
 func (t *TrustedProxy) clientAddr(r *http.Request) (netip.Addr, error) {

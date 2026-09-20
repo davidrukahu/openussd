@@ -1,7 +1,7 @@
 # Getting USSD access in practice
 
 > Status: **notes from doing it**, 2026-09. Corrections welcome on
-> [#11](https://github.com/davidrukahu/openussd/issues/11) — this page is
+> [#11](https://github.com/davidrukahu/openussd/issues/11) - this page is
 > only as good as the markets people have actually shipped in.
 
 Sandbox access is the single most likely cause of a milestone slipping, so
@@ -57,8 +57,8 @@ change under you. Those matter at production scale, not at v0.1.
    allowlist below assumes the gateway is not otherwise reachable.
 4. Dial the code from the browser simulator.
 
-The callback is a form POST — `sessionId`, `serviceCode`, `phoneNumber`,
-`networkCode`, `text` — and the reply is plain text beginning `CON ` or
+The callback is a form POST - `sessionId`, `serviceCode`, `phoneNumber`,
+`networkCode`, `text` - and the reply is plain text beginning `CON ` or
 `END `. Nothing is signed and no secret is sent, which is why the adapter's
 `Verify` always succeeds and the deployment is expected to wrap it in
 `adapter.TrustedProxy` with the provider's published source ranges. Confirm

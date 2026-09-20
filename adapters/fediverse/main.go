@@ -16,7 +16,7 @@ import (
 )
 
 // timelineSize is how many posts one dialogue works with. Enough to be
-// worth browsing, few enough that the session blob stays small — the whole
+// worth browsing, few enough that the session blob stays small - the whole
 // list rides in session state so that paging back does not re-fetch.
 const timelineSize = 10
 
@@ -139,7 +139,7 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 				if err != nil {
 					// A failing instance is not a failing dialogue: keep
 					// the user on the menu with an explanation. The reason
-					// goes to the operator, who can act on it — an
+					// goes to the operator, who can act on it - an
 					// instance that has closed its public timeline to
 					// unauthenticated reads looks identical to one that is
 					// down, from a handset.
@@ -301,7 +301,7 @@ func renderPost(c *openussd.Context[state]) string {
 // postHeader renders the author line, bounded and GSM-safe.
 //
 // Bounded so a long display name cannot push the navigation controls off
-// the bottom of the screen — a user who cannot see "0. Back" is stuck —
+// the bottom of the screen - a user who cannot see "0. Back" is stuck -
 // and GSM-safe so the header never spends the screen's capacity on an
 // emoji in someone's display name.
 func postHeader(p Post, page, pages int) string {

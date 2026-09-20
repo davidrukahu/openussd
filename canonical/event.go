@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-// Phase normalises the session lifecycle. MNOs express this differently —
+// Phase normalises the session lifecycle. MNOs express this differently -
 // Safaricom infers "new" from an empty input field, MTN sends an explicit
-// type code — so adapters map their native signal onto this enum.
+// type code - so adapters map their native signal onto this enum.
 type Phase string
 
 const (

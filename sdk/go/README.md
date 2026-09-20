@@ -66,14 +66,14 @@ http.Handle("/ussd", openussd.NewHandler(app, os.Getenv("WEBHOOK_SECRET"), nil))
 without `Handle` is terminal.
 
 **Actions.** `Goto` moves on, `Finish` ends the dialogue, and `Stay`
-re-renders the current screen with a message above it — the invalid-input
+re-renders the current screen with a message above it - the invalid-input
 path, so a user never loses their place over a typo.
 
 **State.** `Context.State` is a pointer to your own struct. It is encoded
 into the gateway's opaque blob after each turn and decoded before the next.
 Corrupt state restarts the dialogue rather than killing it.
 
-**The budget.** A screen holds 182 characters in the GSM 03.38 alphabet —
+**The budget.** A screen holds 182 characters in the GSM 03.38 alphabet -
 and 70 units the moment it contains anything else, because one emoji or one
 Chinese character re-encodes the whole string as UCS-2. `Truncate`,
 `Paginate`, `Menu`, `MenuFit` and `Shrink` measure against the encoding the
@@ -85,7 +85,7 @@ first, so a long list cannot push "Back" off the screen.
 
 Use `ToGSM` or `Label` where the trade is worth making. A menu of display
 names loses nothing important by dropping emoji, and gains most of its
-options back — one emoji in one name can cut a ten-option list to one.
+options back - one emoji in one name can cut a ten-option list to one.
 A post body is the opposite case: transliterating away a message written in
 Chinese leaves nothing to read, so let it paginate instead.
 

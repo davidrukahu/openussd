@@ -1,7 +1,7 @@
 # OpenUSSD gateway configuration.
 #
 # ${NAME} is expanded from the environment at load time, and an unset
-# variable is a startup error — secrets belong in the environment, not in
+# variable is a startup error - secrets belong in the environment, not in
 # this file.
 
 listen: ":8080"
@@ -28,7 +28,7 @@ adapters:
     enabled: false
     allowed_sources:
       - "196.201.214.0/24"
-    # Your own ingress or load balancer — the only hops allowed to set
+    # Your own ingress or load balancer - the only hops allowed to set
     # X-Forwarded-For.
     trusted_forwarders: []
 

@@ -74,7 +74,7 @@ func Sign(r *http.Request, secret string, ts time.Time, body []byte) {
 // Verify checks the headers on an inbound request against the body.
 //
 // The body must be the exact bytes received: read it once, verify, then
-// decode. Re-encoding before verification will fail, which is intended —
+// decode. Re-encoding before verification will fail, which is intended -
 // the signature covers bytes, not meaning.
 func Verify(h http.Header, secret string, body []byte, now time.Time, tolerance time.Duration) error {
 	if secret == "" {

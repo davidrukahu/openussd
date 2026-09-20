@@ -171,7 +171,7 @@ func Health(w http.ResponseWriter, _ *http.Request) {
 }
 
 // Ready reports whether the gateway can serve traffic, and lists what it is
-// serving — the quickest way to confirm a config actually loaded.
+// serving - the quickest way to confirm a config actually loaded.
 func Ready(adapters []string, tenants []tenant.Tenant) http.HandlerFunc {
 	names := make([]string, 0, len(tenants))
 	for _, t := range tenants {

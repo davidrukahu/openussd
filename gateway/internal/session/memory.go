@@ -9,8 +9,8 @@ import (
 // Memory is an in-process session store. It is the default: a single
 // gateway replica needs nothing else, and the demo runs with no Redis.
 //
-// Sessions do not survive a restart. That is acceptable for USSD — a
-// dialogue outlives a deploy only in the seconds sense — but it is the
+// Sessions do not survive a restart. That is acceptable for USSD - a
+// dialogue outlives a deploy only in the seconds sense - but it is the
 // reason multi-replica deployments need Redis, since two replicas would
 // otherwise each hold half a conversation.
 type Memory struct {

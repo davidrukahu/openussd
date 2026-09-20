@@ -1,5 +1,5 @@
 // Command fediverse is the OpenUSSD reference adapter: it exposes
-// ActivityPub content — currently a Mastodon public timeline — as USSD
+// ActivityPub content - currently a Mastodon public timeline - as USSD
 // menus, and demonstrates what the SDK is for.
 //
 // It is deliberately read-only. Write paths, identity binding between an

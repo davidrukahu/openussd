@@ -2,7 +2,7 @@
 // simulator in cmd/ussdsim.
 //
 // It exists so the gateway can be run and demonstrated end to end with no
-// telco account, no sandbox registration, and no inbound tunnel — the
+// telco account, no sandbox registration, and no inbound tunnel - the
 // fastest path from `git clone` to a working USSD dialogue, and the one a
 // reviewer or a first-time contributor will take.
 //

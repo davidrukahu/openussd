@@ -10,7 +10,7 @@ directory on each change; a mismatch fails CI.
 
 ## Provenance
 
-Fixtures are one of two kinds, and the distinction matters — a hand-written
+Fixtures are one of two kinds, and the distinction matters - a hand-written
 fixture only proves the adapter is self-consistent, while a captured one
 proves it matches the network.
 

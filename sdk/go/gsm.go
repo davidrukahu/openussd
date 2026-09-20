@@ -37,7 +37,7 @@ var transliterations = map[rune]string{
 //
 // This is a trade, and only worth making for labels. One emoji in a menu
 // of authors re-encodes the entire screen as UCS-2 and can cut a
-// ten-option list to one — so for a menu, losing the emoji is plainly
+// ten-option list to one - so for a menu, losing the emoji is plainly
 // better than losing the menu. For a post's body it is the wrong trade:
 // dropping the content of a message written in Chinese leaves nothing
 // worth reading, so post bodies stay UCS-2 and simply paginate further.
@@ -69,8 +69,8 @@ func ToGSM(s string) string {
 }
 
 // Label prepares text for a menu line: GSM-safe, whitespace-free, and
-// shortened to limit. If nothing usable survives — a display name written
-// entirely in a non-Latin script — it returns fallback, so the option is
+// shortened to limit. If nothing usable survives - a display name written
+// entirely in a non-Latin script - it returns fallback, so the option is
 // still selectable rather than blank.
 func Label(s string, limit int, fallback string) string {
 	out := strings.TrimSpace(ToGSM(s))

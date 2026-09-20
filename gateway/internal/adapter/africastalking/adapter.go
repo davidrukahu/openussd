@@ -63,7 +63,7 @@ func New() *Adapter { return &Adapter{} }
 func (a *Adapter) Name() string { return Name }
 
 // Verify always succeeds: the provider offers no authenticity signal to
-// check. See the package comment — wrap this adapter in adapter.TrustedProxy.
+// check. See the package comment - wrap this adapter in adapter.TrustedProxy.
 func (a *Adapter) Verify(*http.Request) error { return nil }
 
 // Parse decodes an Africa's Talking form POST into a canonical event.
@@ -132,7 +132,7 @@ func (a *Adapter) now() time.Time {
 //
 // The provider has no explicit lifecycle signal: an empty text field means
 // the user has just dialled. Cancel and timeout are never delivered as
-// callbacks at all — the session simply stops — so those phases are
+// callbacks at all - the session simply stops - so those phases are
 // synthesised by the gateway's session store when it expires an entry,
 // never produced here.
 func phaseFor(text string) canonical.Phase {

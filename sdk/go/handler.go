@@ -17,7 +17,7 @@ const maxRequestBytes = 256 << 10
 // Handler serves an App over the gateway's webhook protocol.
 //
 // It verifies the gateway's signature before doing anything else, so an
-// application exposed to the internet — which a webhook endpoint is —
+// application exposed to the internet - which a webhook endpoint is -
 // cannot be driven by anyone who guesses its URL.
 type Handler[S any] struct {
 	app    *App[S]

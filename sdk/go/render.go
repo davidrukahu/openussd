@@ -16,10 +16,10 @@ import (
 )
 
 // MaxScreen is the character budget for a screen written in the GSM 03.38
-// alphabet — the number every USSD document quotes.
+// alphabet - the number every USSD document quotes.
 //
 // It is not the budget for every screen. Text containing anything outside
-// that alphabet — an emoji, a Chinese character, a curly quote — is sent
+// that alphabet - an emoji, a Chinese character, a curly quote - is sent
 // as UCS-2, where a screen holds 70 units rather than 182. Content from
 // the federated web is full of such characters, so the helpers here
 // measure with canonical.ScreenCost against canonical.Budget rather than
@@ -39,8 +39,8 @@ func Shrink(s string) string {
 
 	runes := []rune(s)
 	// Binary search the longest prefix that still fits once the ellipsis
-	// is added. Prefix cost is not linear in rune count — one emoji can
-	// change the encoding of the whole string — so it is measured, not
+	// is added. Prefix cost is not linear in rune count - one emoji can
+	// change the encoding of the whole string - so it is measured, not
 	// estimated.
 	lo, hi := 0, len(runes)
 	for lo < hi {
@@ -235,7 +235,7 @@ type MenuItem struct {
 // Labels are truncated before the menu is: a user can act on a shortened
 // label, but not on an option that was dropped. Options that still do not
 // fit are dropped from the end, so a list longer than one screen loses its
-// tail silently — use MenuFit when some options must always be reachable,
+// tail silently - use MenuFit when some options must always be reachable,
 // such as "Back" or "Quit".
 func Menu(title string, items []MenuItem) string {
 	var b strings.Builder

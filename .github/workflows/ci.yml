@@ -36,11 +36,11 @@ jobs:
       - name: Test
         run: go test -race -cover ./...
 
+      # Built through make, which writes into bin/. A bare
+      # "go build ./gateway/cmd/gateway" tries to write a binary named
+      # "gateway" over the gateway/ directory and fails.
       - name: Build binaries
-        run: |
-          go build ./gateway/cmd/gateway
-          go build ./adapters/fediverse
-          go build ./cmd/ussdsim
+        run: make build
 
   lint:
     runs-on: ubuntu-latest

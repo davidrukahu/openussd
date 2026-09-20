@@ -81,12 +81,12 @@ Two packages, one design. Released as `github.com/davidrukahu/openussd/sdk/go` a
 
 Core primitives:
 
-- **`Session`** — typed value object exposing the user's MSISDN, language, tenant, and an application-defined state struct. The SDK persists state back to the gateway on each turn.
-- **`State` / `Screen`** — a state machine. Each state declares the prompt to render, the input it accepts, and the transitions it allows. Inputs are validated before transitioning; invalid input re-renders the same screen with an error.
-- **`Render`** — helpers for the per-screen budget: `Truncate`, `Paginate`, `Menu`, `MenuFit`, `Shrink`, with i18n bundles (Swahili, French, English at launch). Rendered output is measured at runtime as a guard.
+- **`Session`** - typed value object exposing the user's MSISDN, language, tenant, and an application-defined state struct. The SDK persists state back to the gateway on each turn.
+- **`State` / `Screen`** - a state machine. Each state declares the prompt to render, the input it accepts, and the transitions it allows. Inputs are validated before transitioning; invalid input re-renders the same screen with an error.
+- **`Render`** - helpers for the per-screen budget: `Truncate`, `Paginate`, `Menu`, `MenuFit`, `Shrink`, with i18n bundles (Swahili, French, English at launch). Rendered output is measured at runtime as a guard.
 
-  The budget is not a single number. GSM 03.38 packs 182 septets into a USSD string, but any character outside that alphabet — an emoji, a Chinese character, a curly quote — re-encodes the whole screen as UCS-2, where the limit is 70 units. The SDK measures cost in the encoding the text itself forces, and offers `ToGSM` to transliterate where the trade is worth making: a menu of fediverse display names is worth more than the emoji in them, while a post written in Chinese is not worth anything transliterated, so it simply paginates further.
-- **`Auth`** — opt-in PIN and OTP flows. Documents the spoofing risks of trusting MNO-supplied MSISDNs and gives vetted defaults.
+  The budget is not a single number. GSM 03.38 packs 182 septets into a USSD string, but any character outside that alphabet - an emoji, a Chinese character, a curly quote - re-encodes the whole screen as UCS-2, where the limit is 70 units. The SDK measures cost in the encoding the text itself forces, and offers `ToGSM` to transliterate where the trade is worth making: a menu of fediverse display names is worth more than the emoji in them, while a post written in Chinese is not worth anything transliterated, so it simply paginates further.
+- **`Auth`** - opt-in PIN and OTP flows. Documents the spoofing risks of trusting MNO-supplied MSISDNs and gives vetted defaults.
 
 Out of scope for v1: visual flow builders, IVR, WhatsApp.
 
@@ -101,7 +101,7 @@ A reference application (not a framework) built on the SDK. Demonstrates Activit
 - **Identity.** Each MSISDN binds to one Fediverse account via an enrolment flow (USSD-initiated, browser-completed). Spoof-resistant via a one-time link delivered to the bound account.
 - **Character-budget strategy.** Long posts paginate with `Next` / `Prev` controls; image attachments surface as `[image: alt text]`; mentions and hashtags survive truncation.
 
-This component is the research contribution as much as the engineering — the goal is to publish a clear protocol-mapping document alongside the code so other implementers can reuse the design.
+This component is the research contribution as much as the engineering - the goal is to publish a clear protocol-mapping document alongside the code so other implementers can reuse the design.
 
 License: AGPL-3.0-or-later.
 
@@ -122,28 +122,28 @@ License: AGPL-3.0-or-later.
 
 Year-1 targets:
 
-- **Africa's Talking** (implemented) — an aggregator reaching Safaricom and
+- **Africa's Talking** (implemented) - an aggregator reaching Safaricom and
   Airtel in Kenya, MTN and Airtel in Uganda, and several other markets from
   one adapter. It is the only USSD sandbox obtainable without a commercial
   agreement, which is why it is first.
-- **Safaricom direct** — requires a commercial shortcode agreement with a
+- **Safaricom direct** - requires a commercial shortcode agreement with a
   registered Kenyan entity, so it belongs in the funded phase. Note that
   Daraja, named in earlier drafts, is the M-Pesa API portal and exposes no
   USSD. See [`telco-access.md`](telco-access.md).
-- **MTN USSD** (one of Uganda / Nigeria sandboxes — to be picked once sandbox access is confirmed)
+- **MTN USSD** (one of Uganda / Nigeria sandboxes - to be picked once sandbox access is confirmed)
 
 Architectural placeholder for SS7-level signaling exists but is out of scope for v1.
 
 ## Open questions (tracked in RFCs)
 
-1. ~~Canonical session-event schema~~ — implemented and validated against a
+1. ~~Canonical session-event schema~~ - implemented and validated against a
    first adapter; see [`rfcs/0001-telco-adapter-interface.md`](rfcs/0001-telco-adapter-interface.md).
    Still draft until a second real network lands.
-2. ~~Session-state encoding (CBOR vs JSON)~~ — **JSON, opaque to the
+2. ~~Session-state encoding (CBOR vs JSON)~~ - **JSON, opaque to the
    gateway**. Being able to read live state with `redis-cli` during an
    incident beats CBOR's ~30% saving until Redis pressure is measurable,
    and the codec seam remains for when it is ([#10](https://github.com/davidrukahu/openussd/issues/10)).
-3. ActivityPub identity binding flow — how do we prove the USSD user owns the Fediverse account they claim? Still open; the shipped adapter is read-only precisely because this is unresolved ([#9](https://github.com/davidrukahu/openussd/issues/9)).
+3. ActivityPub identity binding flow - how do we prove the USSD user owns the Fediverse account they claim? Still open; the shipped adapter is read-only precisely because this is unresolved ([#9](https://github.com/davidrukahu/openussd/issues/9)).
 4. Whether PeerTube and PixelFed adapters are first-class in v1 or stretch goals.
 5. **New:** how should a shared shortcode render its first screen? The
    router requires exactly one tenant per shortcode with an empty prefix to

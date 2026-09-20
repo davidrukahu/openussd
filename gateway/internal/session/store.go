@@ -10,7 +10,7 @@
 // Application state is stored as opaque JSON. The gateway never looks inside
 // it: it cannot warn on a schema it does not know, and inspecting tenant
 // state would be a multi-tenancy leak waiting to happen. JSON over CBOR is
-// the resolution proposed in issue #10 — CBOR is roughly 30% smaller, but
+// the resolution proposed in issue #10 - CBOR is roughly 30% smaller, but
 // being able to read live state with `redis-cli GET` during an incident is
 // worth more than the bytes until Redis pressure is measurable. The Codec
 // seam below is where CBOR would go if that changes.

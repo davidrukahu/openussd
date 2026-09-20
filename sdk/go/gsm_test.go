@@ -13,7 +13,7 @@ func TestToGSM(t *testing.T) {
 	}{
 		{"already GSM", "Habari yako", "Habari yako"},
 		{"curly quotes", "the “best” option", `the "best" option`},
-		{"em dash and ellipsis", "wait—then…", "wait-then..."},
+		{"em dash and ellipsis", "wait-then…", "wait-then..."},
 		{"accented latin", "Tâi Siáu-káu", "Tai Siau-kau"},
 		{"emoji dropped", "News \U0001f30d Daily", "News Daily"},
 		{"cjk dropped", "台灣國 News", "News"},

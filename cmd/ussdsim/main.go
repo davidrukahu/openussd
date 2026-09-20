@@ -2,7 +2,7 @@
 //
 // It dials a shortcode against the gateway's simulator endpoint and reads
 // back screens the way a feature phone would, flagging any screen that
-// exceeds what the network would carry — so a screen that would be
+// exceeds what the network would carry - so a screen that would be
 // unreadable on a handset is unreadable here too.
 //
 // It exists so the project can be demonstrated without a telco account, a

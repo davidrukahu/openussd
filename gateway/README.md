@@ -34,7 +34,7 @@ FEDIVERSE_WEBHOOK_SECRET=$FEDIVERSE_WEBHOOK_SECRET \
 ## Configuration
 
 See [`gateway.example.yaml`](gateway.example.yaml). `${NAME}` is expanded
-from the environment, and an unset variable is a startup error — secrets
+from the environment, and an unset variable is a startup error - secrets
 stay out of the file.
 
 | Key | Meaning |
@@ -86,7 +86,7 @@ hold half of every conversation; use Redis.
 ## Routing
 
 A tenant claims a `(shortcode, prefix)` pair. Prefixes select a service on a
-shared shortcode and are stripped before the event reaches the tenant — the
+shared shortcode and are stripped before the event reaches the tenant - the
 selector is the gateway's routing, not the application's menu.
 
 Every shortcode needs exactly one tenant with an empty prefix to answer the
@@ -130,4 +130,4 @@ address.
    [`cmd/gateway/main.go`](cmd/gateway/main.go).
 
 If the network's shape does not fit `canonical.Event`, that is a finding
-about the contract, not about your adapter — raise it against RFC-0001.
+about the contract, not about your adapter - raise it against RFC-0001.
