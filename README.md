@@ -152,6 +152,6 @@ OpenUSSD is seeking grant funding from open-source and public-interest funders. 
 
 ## Maintainer
 
-[David W](https://github.com/davidrukahu) - Nairobi, Kenya. Author of three plugins on the WordPress.org directory ([profiles.wordpress.org/davidrukahu](https://profiles.wordpress.org/davidrukahu/)), and an open-source day job.
+[David W](https://github.com/davidrukahu) - Nairobi, Kenya. WordPress.org plugin author ([profiles.wordpress.org/davidrukahu](https://profiles.wordpress.org/davidrukahu/)), and an open-source day job.
 
 Reach out via GitHub issues for project topics, or via the email listed in [`funding.json`](funding.json) for grant/funding correspondence.
