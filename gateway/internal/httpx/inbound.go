@@ -4,10 +4,14 @@ package httpx
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/davidrukahu/openussd/canonical"
@@ -16,6 +20,15 @@ import (
 	"github.com/davidrukahu/openussd/gateway/internal/tenant"
 	"github.com/davidrukahu/openussd/webhook"
 )
+
+// HeaderRequestID correlates one inbound callback across the gateway's logs
+// and the tenant's.
+const HeaderRequestID = "X-Request-Id"
+
+// maxRequestIDLen bounds an inbound correlation id. It is echoed into logs,
+// so it is treated as untrusted text: bounded, and printable characters
+// only.
+const maxRequestIDLen = 64
 
 // userFacingError is what a subscriber sees when the gateway cannot serve a
 // dialogue. It says nothing about why: a handset is not a debugging surface,
@@ -42,7 +55,13 @@ func NewInbound(a adapter.Adapter, sessions session.Store, router *tenant.Router
 
 func (in *Inbound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	log := in.log.With("mno", in.adapter.Name())
+
+	// Every line about this callback carries the same id, and the id goes
+	// back on the response so an operator can follow one dialogue turn
+	// from the network's logs into ours.
+	reqID := requestID(r)
+	w.Header().Set(HeaderRequestID, reqID)
+	log := in.log.With("mno", in.adapter.Name(), "request_id", reqID)
 
 	// Authenticity first, so an unattributable request never reaches the
 	// session store. RFC-0001 puts Verify before Parse for exactly this.
@@ -169,6 +188,40 @@ func (in *Inbound) handle(ctx context.Context, log *slog.Logger, ev canonical.Ev
 		return canonical.Response{}, err
 	}
 	return reply.Response, nil
+}
+
+// requestID returns the caller's correlation id when it sent a usable one,
+// and a fresh id otherwise.
+//
+// An inbound value is untrusted: it is bounded and stripped of anything
+// non-printable before it reaches a log line, so a caller cannot forge log
+// entries by embedding newlines in it.
+func requestID(r *http.Request) string {
+	if given := r.Header.Get(HeaderRequestID); given != "" {
+		if id := sanitiseID(given); id != "" {
+			return id
+		}
+	}
+
+	var buf [8]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		// The clock is a poor id but a better one than none: correlation
+		// is a debugging aid, not a correctness property.
+		return strconv.FormatInt(time.Now().UnixNano(), 36)
+	}
+	return hex.EncodeToString(buf[:])
+}
+
+func sanitiseID(in string) string {
+	if len(in) > maxRequestIDLen {
+		in = in[:maxRequestIDLen]
+	}
+	return strings.Map(func(r rune) rune {
+		if r < ' ' || r > '~' {
+			return -1
+		}
+		return r
+	}, in)
 }
 
 // Health reports process liveness. It does no dependency checks: a liveness

@@ -395,3 +395,41 @@ func TestMalformedRequestIsRejected(t *testing.T) {
 		t.Error("an unparseable request still allocated session state")
 	}
 }
+
+func TestRequestIDCorrelatesATurn(t *testing.T) {
+	srv := tenantServer(t)
+	defer srv.Close()
+
+	store := session.NewMemory()
+	defer store.Close()
+	h := newGateway(t, srv.URL, store)
+
+	send := func(header string) string {
+		t.Helper()
+		body := strings.NewReader("sessionId=ATUid_1&serviceCode=*384*1234%23&phoneNumber=%2B254711223344&text=")
+		req := httptest.NewRequest(http.MethodPost, "/ussd/africastalking", body)
+		if header != "" {
+			req.Header.Set(HeaderRequestID, header)
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec.Header().Get(HeaderRequestID)
+	}
+
+	if got := send(""); got == "" {
+		t.Error("no request id was generated")
+	}
+	if got := send("abc-123"); got != "abc-123" {
+		t.Errorf("request id = %q, want the caller's own id echoed back", got)
+	}
+
+	// An id is echoed into log lines, so a caller must not be able to
+	// forge entries by embedding newlines in it.
+	got := send("abc\ndef\rlevel=ERROR")
+	if strings.ContainsAny(got, "\n\r") {
+		t.Errorf("request id = %q, want control characters stripped", got)
+	}
+	if len(send(strings.Repeat("x", 500))) > maxRequestIDLen {
+		t.Error("an oversized request id was not bounded")
+	}
+}
