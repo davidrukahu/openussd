@@ -122,11 +122,21 @@ type Router struct {
 func NewRouter(tenants []Tenant) (*Router, error) {
 	table := make(map[string][]Tenant, len(tenants))
 	seen := make(map[string]string, len(tenants))
+	names := make(map[string]struct{}, len(tenants))
 
 	for _, t := range tenants {
 		if err := t.Validate(); err != nil {
 			return nil, err
 		}
+		// Names must be unique because the gateway uses them to decide
+		// whether a dialogue has moved between tenants, and clears the
+		// session state when it has. Two tenants sharing a name would
+		// carry one's state into the other.
+		if _, dup := names[t.Name]; dup {
+			return nil, fmt.Errorf("tenant %q is declared twice: names must be unique", t.Name)
+		}
+		names[t.Name] = struct{}{}
+
 		route := t.Shortcode + "|" + strings.Join(t.Prefix, "*")
 		if other, dup := seen[route]; dup {
 			return nil, fmt.Errorf("tenant %q collides with %q: both claim %s", t.Name, other, route)

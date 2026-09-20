@@ -22,7 +22,7 @@ Three components, developed in this monorepo:
 2. **SDK** - libraries (Go, TypeScript) for building USSD applications as state machines, with typed sessions, multi-language support, and built-in handling of the per-screen character limit - 182 in the GSM alphabet, but only 70 the moment a screen contains an emoji or a non-Latin script, which content from the federated web constantly does.
 3. **Fediverse adapter** - a reference adapter that exposes ActivityPub-compatible Fediverse content (Mastodon timelines, PeerTube titles, PixelFed feeds) through USSD menus, demonstrating how the federated web can reach feature phones.
 
-See [`docs/architecture.md`](docs/architecture.md) for the high-level design and [`docs/rfcs/`](docs/rfcs/) for in-progress design notes.
+See [`docs/architecture.md`](docs/architecture.md) for the high-level design, [`docs/webhook-protocol.md`](docs/webhook-protocol.md) for the wire contract a tenant in any language implements, and [`docs/rfcs/`](docs/rfcs/) for in-progress design notes.
 
 ## Try it
 

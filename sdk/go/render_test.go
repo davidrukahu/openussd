@@ -272,3 +272,22 @@ func TestMenuFitsWithNonLatinLabels(t *testing.T) {
 		t.Errorf("shown = %d, want at least one option", shown)
 	}
 }
+
+// BenchmarkPaginate guards the cost of the operation a post screen performs
+// on every keypress. Both budget searches are bounded by the screen size, so
+// a long post should cost roughly its length, not its length squared.
+func BenchmarkPaginate(b *testing.B) {
+	cases := map[string]string{
+		"gsm":  strings.Repeat("A long post about USSD and the fediverse. ", 120),
+		"ucs2": strings.Repeat("台灣國 a long post about USSD and the fediverse. ", 100),
+	}
+
+	for name, body := range cases {
+		b.Run(name, func(b *testing.B) {
+			b.ReportAllocs()
+			for b.Loop() {
+				Paginate(body, 60)
+			}
+		})
+	}
+}

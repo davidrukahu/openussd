@@ -8,7 +8,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/davidrukahu/openussd/canonical"
@@ -103,6 +102,15 @@ func (in *Inbound) handle(ctx context.Context, log *slog.Logger, ev canonical.Ev
 		// shortcode. Log it loudly, because it should not happen.
 		log.Error("could not load session, starting a new one", "error", err)
 		sess = session.Session{Key: key, MSISDN: ev.MSISDN, Shortcode: ev.Shortcode}
+	case sess.MSISDN != ev.MSISDN:
+		// The session id matched but the subscriber did not. Session ids
+		// are network-assigned and unguessable in practice, so this is
+		// either a network reusing one or somebody probing the endpoint.
+		// Either way the safe reading is that this is a different
+		// dialogue, so it starts clean rather than inheriting the stored
+		// tenant and state.
+		log.Warn("session id reused by a different subscriber, starting a new dialogue")
+		sess = session.Session{Key: key, MSISDN: ev.MSISDN, Shortcode: ev.Shortcode}
 	}
 
 	// The network abandoned this dialogue; release the state and render
@@ -170,20 +178,20 @@ func Health(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"ok"}`))
 }
 
-// Ready reports whether the gateway can serve traffic, and lists what it is
-// serving - the quickest way to confirm a config actually loaded.
+// Ready reports whether the gateway can serve traffic.
+//
+// It reports counts rather than the routing table. The endpoint is
+// unauthenticated, and a list of tenant names with their shortcodes and
+// routing prefixes is exactly what someone needs to aim a forged callback at
+// a particular tenant. The full table is logged at startup instead, where
+// the operator can see it and nobody else can.
 func Ready(adapters []string, tenants []tenant.Tenant) http.HandlerFunc {
-	names := make([]string, 0, len(tenants))
-	for _, t := range tenants {
-		names = append(names, t.Name+"@"+t.Shortcode+strings.Join(t.Prefix, "*"))
-	}
-
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status":   "ready",
 			"adapters": adapters,
-			"tenants":  names,
+			"tenants":  len(tenants),
 		})
 	}
 }

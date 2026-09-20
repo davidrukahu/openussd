@@ -1,10 +1,12 @@
 package webhook
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -160,5 +162,17 @@ func TestSignatureIsStable(t *testing.T) {
 	}
 	if Signature(testSecret, testNow.Add(time.Second), testBody) == first {
 		t.Error("signature does not cover the timestamp")
+	}
+}
+
+// TestRequestCarriesItsVersion pins the field a tenant keys on to decide
+// whether it can parse the payload at all.
+func TestRequestCarriesItsVersion(t *testing.T) {
+	body, err := json.Marshal(Request{Version: Version, Turn: 1})
+	if err != nil {
+		t.Fatalf("encoding: %v", err)
+	}
+	if !strings.Contains(string(body), `"version":"1"`) {
+		t.Errorf("request = %s, want an explicit version", body)
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -93,7 +92,6 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 			"menu.about":     "About",
 			"menu.quit":      "Quit",
 			"timeline.title": "Latest posts",
-			"timeline.back":  "0. Back",
 			"nav.next":       "1. Next",
 			"nav.prev":       "2. Prev",
 			"nav.back":       "0. Back",
@@ -135,7 +133,7 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 		Handle: func(c *openussd.Context[state], input string) (openussd.Action, error) {
 			switch input {
 			case "1":
-				posts, err := client.PublicTimeline(context.Background(), timelineSize)
+				posts, err := client.PublicTimeline(c.Ctx(), timelineSize)
 				if err != nil {
 					// A failing instance is not a failing dialogue: keep
 					// the user on the menu with an explanation. The reason
@@ -249,11 +247,9 @@ func newApp(client *Mastodon, log *slog.Logger) (*openussd.App[state], error) {
 // name cannot crowd out the post itself.
 const maxHeaderLen = 28
 
-// worstCaseNav is the longest navigation footer a post screen can carry.
-// Pagination reserves room for it rather than for whichever controls this
-// particular page happens to show, so a page does not overflow the moment
-// a Prev control appears on it.
-const worstCaseNav = "1. Next 2. Prev 0. Back"
+// widestPageCounter is the page-counter suffix at its longest, reserved so
+// pagination does not have to know how many pages it is about to produce.
+const widestPageCounter = 99
 
 func postPages(c *openussd.Context[state]) []string {
 	if c.State.Cursor >= len(c.State.Posts) {
@@ -263,11 +259,14 @@ func postPages(c *openussd.Context[state]) []string {
 	post := c.State.Posts[c.State.Cursor]
 
 	// The reserve is measured from the real header and footer rather than
-	// guessed at with a constant. Both are GSM-safe, so their cost in
-	// runes equals their cost in either encoding's units, and the
-	// arithmetic holds whichever encoding the post body forces.
-	header := postHeader(post, 99, 99)
-	reserve := len([]rune(header)) + len([]rune(worstCaseNav)) + 2
+	// guessed at with a constant, and the footer is measured in the
+	// session's own language: a translated "Next" is not the same width as
+	// the English one. Both are GSM-safe, so their cost in runes equals
+	// their cost in either encoding's units, and the arithmetic holds
+	// whichever encoding the post body forces.
+	header := postHeader(post, widestPageCounter, widestPageCounter)
+	nav := openussd.ToGSM(strings.Join([]string{c.T("nav.next"), c.T("nav.prev"), c.T("nav.back")}, " "))
+	reserve := len([]rune(header)) + len([]rune(nav)) + 2
 
 	return openussd.Paginate(post.Text, reserve)
 }

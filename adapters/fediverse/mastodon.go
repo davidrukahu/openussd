@@ -19,7 +19,19 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
+
+// maxPostBytes caps what one post contributes to session state.
+//
+// The whole fetched timeline rides in the session blob so that paging back
+// does not re-fetch, and that blob crosses the tenant webhook on every turn,
+// where the gateway rejects a reply over 16KB. Ten unbounded posts clear
+// that on their own: ten posts of 500 CJK characters measure about 15KB, so
+// an ordinary timeline could fail the dialogue outright. 900 bytes is
+// roughly five GSM screens or two of CJK, which is more than anyone reads
+// on a feature phone.
+const maxPostBytes = 900
 
 // Post is one timeline entry, reduced to what a 182-character screen can
 // carry. Everything a handset cannot render is dropped at the edge rather
@@ -28,6 +40,23 @@ type Post struct {
 	Author string `json:"a"`
 	Text   string `json:"t"`
 	When   string `json:"w"`
+}
+
+// instanceTimeout is shorter than the gateway's own tenant timeout on
+// purpose: a slow instance must not be the reason a handset sees nothing.
+const instanceTimeout = 3 * time.Second
+
+// defaultInstanceClient is shared across dialogues so its connection pool is
+// reused. Every dialogue that opens the timeline fetches from the same host,
+// and the standard two-idle-connection default would make most of those pay
+// a fresh TLS handshake out of a three-second budget.
+var defaultInstanceClient = &http.Client{
+	Timeout: instanceTimeout,
+	Transport: func() *http.Transport {
+		tr := http.DefaultTransport.(*http.Transport).Clone()
+		tr.MaxIdleConnsPerHost = 32
+		return tr
+	}(),
 }
 
 // Mastodon reads public timelines from one instance.
@@ -77,9 +106,7 @@ func (m *Mastodon) PublicTimeline(ctx context.Context, limit int) ([]Post, error
 
 	client := m.Client
 	if client == nil {
-		// Shorter than the tenant's own webhook timeout on purpose: a slow
-		// instance must not be the reason a handset sees nothing.
-		client = &http.Client{Timeout: 3 * time.Second}
+		client = defaultInstanceClient
 	}
 
 	resp, err := client.Do(req)
@@ -136,9 +163,26 @@ func toPost(s apiStatus) Post {
 
 	return Post{
 		Author: strings.TrimSpace(author),
-		Text:   strings.TrimSpace(text),
+		Text:   capBytes(strings.TrimSpace(text), maxPostBytes),
 		When:   humaniseTime(s.CreatedAt),
 	}
+}
+
+// capBytes shortens s to at most limit bytes, cutting on a rune boundary and
+// marking the cut.
+func capBytes(s string, limit int) string {
+	if len(s) <= limit {
+		return s
+	}
+
+	cut := 0
+	for i := range s {
+		if i > limit-3 {
+			break
+		}
+		cut = i
+	}
+	return strings.TrimRightFunc(s[:cut], unicode.IsSpace) + "..."
 }
 
 var (

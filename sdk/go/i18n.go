@@ -27,21 +27,22 @@ func NewBundle(langs map[string]map[string]string) *Bundle {
 // T looks up key in lang, falling back to the fallback language and then to
 // the key itself.
 //
-// Returning the key rather than an empty string means a missing translation
-// shows up as an odd-looking screen in testing, instead of a blank one in
-// production.
+// Language codes are matched case-insensitively, so a session carrying "SW"
+// resolves the same bundle as "sw". Returning the key rather than an empty
+// string means a missing translation shows up as an odd-looking screen in
+// testing, instead of a blank one in production.
 func (b *Bundle) T(lang, key string) string {
 	if b == nil {
 		return key
 	}
-	if v, ok := b.strings[lang][key]; ok {
+	if v, ok := b.strings[strings.ToLower(lang)][key]; ok {
 		return v
 	}
 	fallback := b.Fallback
 	if fallback == "" {
 		fallback = DefaultLang
 	}
-	if v, ok := b.strings[fallback][key]; ok {
+	if v, ok := b.strings[strings.ToLower(fallback)][key]; ok {
 		return v
 	}
 	return key

@@ -6,6 +6,14 @@ import (
 	"github.com/davidrukahu/openussd/canonical"
 )
 
+// Version is the protocol version carried by every request. It covers the
+// envelope and the canonical event inside it; the signature carries its own
+// scheme version separately, because the two can rotate independently.
+//
+// Adding a field is not a version change: tenants must ignore keys they do
+// not recognise. Removing or reinterpreting one is.
+const Version = "1"
+
 // Request is the JSON body the gateway POSTs to a tenant.
 //
 // It carries the event and the application's own state from the previous
@@ -13,6 +21,11 @@ import (
 // stateless: they can be restarted, scaled out, or run on a serverless
 // platform without losing a dialogue mid-menu.
 type Request struct {
+	// Version is the protocol version, always Version for a gateway that
+	// sent it. A tenant that does not recognise it should refuse the turn
+	// rather than guess at the payload.
+	Version string `json:"version"`
+
 	Event canonical.Event `json:"event"`
 	// Turn counts screens served in this session, starting at 1.
 	Turn int `json:"turn"`

@@ -243,3 +243,33 @@ func TestRegistry(t *testing.T) {
 		t.Errorf("Names() = %v, want them sorted", names)
 	}
 }
+
+// TestTrustedProxyReadsEveryForwardedForLine: Go keeps repeated header lines
+// as separate values and Header.Get returns only the first, so a proxy that
+// adds its own line rather than appending would leave the scanned chain
+// entirely attacker-supplied.
+func TestTrustedProxyReadsEveryForwardedForLine(t *testing.T) {
+	tp := &TrustedProxy{
+		Adapter:    &stub{name: "x"},
+		Allowed:    prefixes(t, "203.0.113.0/24"),
+		Forwarders: prefixes(t, "10.0.0.0/8"),
+	}
+
+	// The attacker sets the first line; our proxy appends a second one
+	// naming the address it actually saw.
+	req := request("10.0.0.1:40000", "")
+	req.Header.Add("X-Forwarded-For", "203.0.113.9")
+	req.Header.Add("X-Forwarded-For", "198.51.100.9")
+
+	if err := tp.Verify(req); !errors.Is(err, ErrUntrusted) {
+		t.Fatalf("err = %v, want the last observed hop to decide", err)
+	}
+
+	// And the legitimate ordering still passes.
+	ok := request("10.0.0.1:40000", "")
+	ok.Header.Add("X-Forwarded-For", "198.51.100.9")
+	ok.Header.Add("X-Forwarded-For", "203.0.113.9")
+	if err := tp.Verify(ok); err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+}

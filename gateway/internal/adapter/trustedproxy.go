@@ -109,7 +109,11 @@ func (t *TrustedProxy) clientAddr(r *http.Request) (netip.Addr, error) {
 		return peer, nil
 	}
 
-	hops := strings.Split(r.Header.Get("X-Forwarded-For"), ",")
+	// Every X-Forwarded-For line, not just the first: Go keeps repeated
+	// header lines as separate values, and a proxy that adds its own line
+	// instead of appending to the existing one would otherwise leave the
+	// whole scanned chain attacker-supplied.
+	hops := strings.Split(strings.Join(r.Header.Values("X-Forwarded-For"), ","), ",")
 	for i := len(hops) - 1; i >= 0; i-- {
 		hop, err := netip.ParseAddr(strings.TrimSpace(hops[i]))
 		if err != nil {

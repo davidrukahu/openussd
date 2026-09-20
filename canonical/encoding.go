@@ -1,7 +1,5 @@
 package canonical
 
-import "unicode/utf16"
-
 // A USSD string is carried in one of two encodings, and they do not have
 // the same capacity.
 //
@@ -91,9 +89,27 @@ func ScreenCost(s string) (int, Encoding) {
 		}
 		// One non-GSM character forces UCS-2 for the whole string, so the
 		// GSM tally is abandoned rather than adjusted.
-		return len(utf16.Encode([]rune(s))), EncodingUCS2
+		return ucs2Units(s), EncodingUCS2
 	}
 	return cost, EncodingGSM7
+}
+
+// ucs2Units counts UTF-16 code units without allocating. A character outside
+// the Basic Multilingual Plane is a surrogate pair and costs two.
+//
+// This is the hot path: the SDK's budget searches call ScreenCost once per
+// probe, so encoding the string to []uint16 just to take its length turned a
+// screen render into megabytes of garbage.
+func ucs2Units(s string) int {
+	units := 0
+	for _, r := range s {
+		if r > 0xFFFF {
+			units += 2
+			continue
+		}
+		units++
+	}
+	return units
 }
 
 // Budget reports the capacity available to s, given the encoding its own

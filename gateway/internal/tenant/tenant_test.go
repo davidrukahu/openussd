@@ -232,3 +232,57 @@ func TestDeliverHonoursTimeout(t *testing.T) {
 		t.Errorf("waited %s, expected to give up after ~50ms", elapsed)
 	}
 }
+
+// TestNewRouterRejectsDuplicateNames: the gateway decides a dialogue has
+// moved between tenants by comparing names, and clears session state when it
+// has. Two tenants sharing a name would carry one's state into the other.
+func TestNewRouterRejectsDuplicateNames(t *testing.T) {
+	a := tenantFor("shared")
+	b := tenantFor("shared")
+	b.Shortcode = "*999#"
+
+	_, err := NewRouter([]Tenant{a, b})
+	if err == nil || !strings.Contains(err.Error(), "names must be unique") {
+		t.Fatalf("err = %v, want a duplicate-name rejection", err)
+	}
+}
+
+// TestDeliverAlwaysSendsPathAsAnArray: a nil slice marshals to null, so the
+// two ways a turn can carry no input would otherwise reach a tenant as null
+// and [] respectively.
+func TestDeliverAlwaysSendsPathAsAnArray(t *testing.T) {
+	var bodies []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		bodies = append(bodies, string(body))
+		_ = json.NewEncoder(w).Encode(webhook.Reply{Response: canonical.Continue("ok")})
+	}))
+	defer srv.Close()
+
+	tn := Tenant{Name: "demo", Shortcode: "*384*1234#", WebhookURL: srv.URL, Secret: "s"}
+	d := NewDispatcher(srv.Client())
+
+	// A fresh dialogue, whose Path is nil.
+	if _, err := d.Deliver(context.Background(), tn, webhook.Request{
+		Event: canonical.Event{MNO: "m", SessionID: "s1", MSISDN: "+254711223344", Phase: canonical.PhaseBegin},
+	}); err != nil {
+		t.Fatalf("Deliver: %v", err)
+	}
+
+	// A turn whose routing prefix consumed every segment.
+	if _, err := d.Deliver(context.Background(), tn, webhook.Request{
+		Event: canonical.Event{MNO: "m", SessionID: "s1", MSISDN: "+254711223344",
+			Path: []string{}, Phase: canonical.PhaseContinue},
+	}); err != nil {
+		t.Fatalf("Deliver: %v", err)
+	}
+
+	for i, body := range bodies {
+		if strings.Contains(body, `"path":null`) {
+			t.Errorf("delivery %d sent path as null: %s", i, body)
+		}
+		if !strings.Contains(body, `"path":[]`) {
+			t.Errorf("delivery %d did not send path as an array: %s", i, body)
+		}
+	}
+}

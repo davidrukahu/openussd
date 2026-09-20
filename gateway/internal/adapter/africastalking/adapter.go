@@ -132,9 +132,11 @@ func (a *Adapter) now() time.Time {
 //
 // The provider has no explicit lifecycle signal: an empty text field means
 // the user has just dialled. Cancel and timeout are never delivered as
-// callbacks at all - the session simply stops - so those phases are
-// synthesised by the gateway's session store when it expires an entry,
-// never produced here.
+// callbacks at all, the session simply stops, so this adapter produces
+// neither. Nothing else produces them either today: the session store
+// expires an abandoned dialogue silently rather than synthesising a
+// terminal event. Only the local simulator can send one, which is how the
+// gateway's terminal-phase handling gets exercised.
 func phaseFor(text string) canonical.Phase {
 	if text == "" {
 		return canonical.PhaseBegin

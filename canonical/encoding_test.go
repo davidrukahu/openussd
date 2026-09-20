@@ -94,3 +94,20 @@ func TestResponseValidateUsesTheRightBudget(t *testing.T) {
 		t.Errorf("error = %q, want it to name the encoding", err)
 	}
 }
+
+// TestValidateBoundsSessionID: the identifier is attacker-supplied at an
+// endpoint that trusts network position, and it becomes a session-store key.
+func TestValidateBoundsSessionID(t *testing.T) {
+	ev := Event{MNO: "m", MSISDN: "+254711223344", Phase: PhaseBegin}
+
+	ev.SessionID = strings.Repeat("a", MaxSessionIDLen)
+	if err := ev.Validate(); err != nil {
+		t.Errorf("a session id at the limit was rejected: %v", err)
+	}
+
+	ev.SessionID = strings.Repeat("a", MaxSessionIDLen+1)
+	err := ev.Validate()
+	if err == nil || !strings.Contains(err.Error(), "limit is") {
+		t.Fatalf("err = %v, want an oversized session id to be rejected", err)
+	}
+}

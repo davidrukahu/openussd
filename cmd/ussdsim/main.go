@@ -117,6 +117,12 @@ func send(client *http.Client, endpoint string, req request) (canonical.Response
 		return canonical.Response{}, fmt.Errorf("gateway replied %s", resp.Status)
 	}
 
+	// A terminal phase gets an empty 200: there is no handset left to render
+	// to, so there is nothing to decode.
+	if req.Phase.Terminal() {
+		return canonical.Response{}, nil
+	}
+
 	var out canonical.Response
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 		return canonical.Response{}, fmt.Errorf("decoding gateway reply: %w", err)

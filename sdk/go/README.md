@@ -10,6 +10,10 @@ actually carry.
 import openussd "github.com/davidrukahu/openussd/sdk/go"
 ```
 
+The wire protocol this SDK speaks is documented in
+[`docs/webhook-protocol.md`](../../docs/webhook-protocol.md), so a tenant can
+be written in any language.
+
 > Licensed AGPL-3.0-or-later while it lives in this monorepo. It will be
 > re-licensed Apache-2.0 if it is split into its own module, so it can be
 > embedded without copyleft propagation.
@@ -69,6 +73,11 @@ without `Handle` is terminal.
 re-renders the current screen with a message above it - the invalid-input
 path, so a user never loses their place over a typo.
 
+**Context.** `Context.Ctx()` carries the gateway's deadline for this turn.
+Pass it to anything you call out to: the gateway abandons a turn after its
+per-tenant timeout because the handset is already gone, and an outbound call
+that ignores the cancellation keeps running for a dialogue nobody is reading.
+
 **State.** `Context.State` is a pointer to your own struct. It is encoded
 into the gateway's opaque blob after each turn and decoded before the next.
 Corrupt state restarts the dialogue rather than killing it.
@@ -96,11 +105,11 @@ production.
 
 ## Testing an application
 
-`App.Turn` takes an event, a turn number, and the stored state, and returns
-the screen and the new state. No HTTP, no gateway:
+`App.Turn` takes a context, an event, a turn number, and the stored state,
+and returns the screen and the new state. No HTTP, no gateway:
 
 ```go
-resp, state, err := app.Turn(canonical.Event{
+resp, state, err := app.Turn(context.Background(), canonical.Event{
     MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
     Path: []string{"1"}, Phase: canonical.PhaseContinue,
 }, 2, previousState)

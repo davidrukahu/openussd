@@ -24,13 +24,31 @@ type Dispatcher struct {
 	now    func() time.Time
 }
 
+// maxIdleConnsPerTenant sizes the connection pool per tenant host.
+//
+// The standard library defaults to two, which suits a client talking to many
+// hosts at low concurrency. A gateway is the opposite shape: a handful of
+// tenant hosts at whatever concurrency the shortcode attracts. At the default
+// every turn past the second would re-handshake TCP and TLS, adding round
+// trips to a dialogue the network will abandon in seconds.
+const maxIdleConnsPerTenant = 100
+
 // NewDispatcher returns a dispatcher. A nil client means a default one
 // whose per-request deadline comes from the tenant's timeout.
 func NewDispatcher(client *http.Client) *Dispatcher {
 	if client == nil {
-		client = &http.Client{}
+		client = &http.Client{Transport: pooledTransport()}
 	}
 	return &Dispatcher{client: client, now: func() time.Time { return time.Now().UTC() }}
+}
+
+// pooledTransport clones the standard transport and widens its per-host idle
+// pool.
+func pooledTransport() *http.Transport {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr.MaxIdleConnsPerHost = maxIdleConnsPerTenant
+	tr.MaxIdleConns = maxIdleConnsPerTenant * 4
+	return tr
 }
 
 // Deliver posts the event and the tenant's stored state to the tenant, and
@@ -39,10 +57,21 @@ func NewDispatcher(client *http.Client) *Dispatcher {
 // The context governs the whole call, including the tenant's timeout, so a
 // cancelled inbound request does not leave an outbound one running.
 func (d *Dispatcher) Deliver(ctx context.Context, t Tenant, payload webhook.Request) (webhook.Reply, error) {
+	payload.Version = webhook.Version
+
 	// Raw is the MNO's original bytes, kept for the gateway's own audit log.
 	// Tenants get the canonical shape only; forwarding it would leak wire
 	// details the SDK exists to hide, and grow every request.
 	payload.Event.Raw = nil
+
+	// path is always an array on the wire. A nil slice marshals to null,
+	// and the two ways a turn can carry no input (a fresh dialogue, and a
+	// routing prefix consuming everything) would otherwise reach tenants
+	// as null and [] respectively. A tenant in a language without Go's
+	// nil-slice equivalence would have to handle both.
+	if payload.Event.Path == nil {
+		payload.Event.Path = []string{}
+	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {

@@ -66,7 +66,19 @@ func (h *Handler[S]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, state, err := h.app.Turn(req.Event, req.Turn, req.State)
+	// An unrecognised protocol version means the gateway is newer than
+	// this SDK. Guessing at the payload is worse than saying so: the
+	// gateway renders its own failure screen and the operator gets a log
+	// line naming the mismatch. An empty version is a gateway from before
+	// the field existed, and is read as version 1.
+	if req.Version != "" && req.Version != webhook.Version {
+		h.log.Error("unsupported protocol version from the gateway",
+			"got", req.Version, "supported", webhook.Version)
+		http.Error(w, "unsupported protocol version", http.StatusBadRequest)
+		return
+	}
+
+	resp, state, err := h.app.Turn(r.Context(), req.Event, req.Turn, req.State)
 	if err != nil {
 		// Returning 500 lets the gateway render its own failure screen,
 		// which is a better user experience than this application guessing

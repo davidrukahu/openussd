@@ -1,6 +1,7 @@
 package openussd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -22,7 +23,21 @@ type Context[S any] struct {
 	// Lang is the resolved language for this session.
 	Lang string
 
+	ctx    context.Context
 	bundle *Bundle
+}
+
+// Ctx returns the context for this turn, carrying the gateway's deadline.
+//
+// Screens that call out to another service should pass it along. The
+// gateway abandons a turn after its per-tenant timeout because the handset
+// is already gone by then; an outbound call that ignores the cancellation
+// keeps running and holding a connection for a dialogue nobody is reading.
+func (c *Context[S]) Ctx() context.Context {
+	if c.ctx == nil {
+		return context.Background()
+	}
+	return c.ctx
 }
 
 // MSISDN returns the subscriber number claimed by the network.
@@ -102,9 +117,9 @@ func NewApp[S any](start string, screens ...Screen[S]) (*App[S], error) {
 		return nil, fmt.Errorf("openussd: start screen %q is not declared", start)
 	}
 
-	// Catch dangling transitions at construction rather than when a user
-	// walks into one. Only static targets are checkable; a Handle that
-	// computes a name is on its own.
+	// Transitions are not checked here. A Handle returns its target at
+	// runtime, often computed, so there is nothing static to walk; Turn
+	// reports an unknown target when one is actually taken.
 	return app, nil
 }
 
@@ -128,7 +143,10 @@ type state[S any] struct {
 // stored last turn, and returns the screen to render plus the state to
 // store. It is deliberately independent of HTTP so an application can be
 // tested by calling it directly.
-func (a *App[S]) Turn(ev canonical.Event, turn int, stored json.RawMessage) (canonical.Response, json.RawMessage, error) {
+//
+// The context reaches screens through Context.Ctx, so an outbound call a
+// screen makes is cancelled with the turn.
+func (a *App[S]) Turn(ctx context.Context, ev canonical.Event, turn int, stored json.RawMessage) (canonical.Response, json.RawMessage, error) {
 	var st state[S]
 	if len(stored) > 0 {
 		if err := json.Unmarshal(stored, &st); err != nil {
@@ -149,20 +167,20 @@ func (a *App[S]) Turn(ev canonical.Event, turn int, stored json.RawMessage) (can
 		return canonical.Response{}, nil, fmt.Errorf("openussd: stored screen %q no longer exists", st.Screen)
 	}
 
-	ctx := &Context[S]{Event: ev, Turn: turn, State: &st.App, Lang: st.Lang, bundle: a.bundle}
+	tctx := &Context[S]{Event: ev, Turn: turn, State: &st.App, Lang: st.Lang, ctx: ctx, bundle: a.bundle}
 
 	// The first turn has no input to handle: render the start screen.
 	if ev.Phase == canonical.PhaseBegin || len(ev.Path) == 0 {
-		return a.render(ctx, current, "", &st)
+		return a.render(tctx, current, "", &st)
 	}
 
 	if current.Handle == nil {
 		// A terminal screen received input. The dialogue is over; say so
 		// rather than silently re-rendering.
-		return canonical.End(ctx.T("session.ended")), nil, nil
+		return canonical.End(tctx.T("session.ended")), nil, nil
 	}
 
-	action, err := current.Handle(ctx, ev.LastInput())
+	action, err := current.Handle(tctx, ev.LastInput())
 	if err != nil {
 		return canonical.Response{}, nil, err
 	}
@@ -170,7 +188,7 @@ func (a *App[S]) Turn(ev canonical.Event, turn int, stored json.RawMessage) (can
 	if action.End {
 		body := action.Text
 		if body == "" {
-			body = ctx.T("session.ended")
+			body = tctx.T("session.ended")
 		}
 		return canonical.End(Shrink(body)), nil, nil
 	}
@@ -183,7 +201,7 @@ func (a *App[S]) Turn(ev canonical.Event, turn int, stored json.RawMessage) (can
 		}
 		st.Screen = next.Name
 	}
-	return a.render(ctx, next, action.Text, &st)
+	return a.render(tctx, next, action.Text, &st)
 }
 
 // render produces a screen, optionally prefixed with a message, and encodes

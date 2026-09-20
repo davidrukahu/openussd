@@ -42,6 +42,11 @@ func (p Phase) Valid() bool {
 	return false
 }
 
+// MaxSessionIDLen bounds the network-assigned session identifier. Real ones
+// are tens of characters; the limit stops an inbound endpoint being used to
+// allocate session-store keys the size of a request body.
+const MaxSessionIDLen = 128
+
 // Event is one inbound turn of a USSD dialogue, normalised across MNOs.
 type Event struct {
 	// MNO identifies the adapter that produced this event, e.g. "africastalking".
@@ -91,6 +96,8 @@ func (e Event) Validate() error {
 		return fmt.Errorf("canonical: event has no MNO")
 	case e.SessionID == "":
 		return fmt.Errorf("canonical: event has no session id")
+	case len(e.SessionID) > MaxSessionIDLen:
+		return fmt.Errorf("canonical: session id is %d bytes, limit is %d", len(e.SessionID), MaxSessionIDLen)
 	case e.MSISDN == "":
 		return fmt.Errorf("canonical: event has no MSISDN")
 	case !e.Phase.Valid():

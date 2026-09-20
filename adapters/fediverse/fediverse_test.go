@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/davidrukahu/openussd/canonical"
 	openussd "github.com/davidrukahu/openussd/sdk/go"
@@ -135,7 +137,7 @@ func TestDialogueBrowsesAndPaginates(t *testing.T) {
 			path = append(path, input)
 		}
 
-		resp, state, err := app.Turn(canonical.Event{
+		resp, state, err := app.Turn(context.Background(), canonical.Event{
 			MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
 			Shortcode: "*384*1234#", Path: path, Phase: phase,
 		}, turn, stored)
@@ -194,14 +196,14 @@ func TestUnreachableInstanceKeepsTheDialogueAlive(t *testing.T) {
 		t.Fatalf("newApp: %v", err)
 	}
 
-	_, stored, err := app.Turn(canonical.Event{
+	_, stored, err := app.Turn(context.Background(), canonical.Event{
 		MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344", Phase: canonical.PhaseBegin,
 	}, 1, nil)
 	if err != nil {
 		t.Fatalf("first turn: %v", err)
 	}
 
-	resp, _, err := app.Turn(canonical.Event{
+	resp, _, err := app.Turn(context.Background(), canonical.Event{
 		MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
 		Path: []string{"1"}, Phase: canonical.PhaseContinue,
 	}, 2, stored)
@@ -238,7 +240,7 @@ func TestUnofferedNavigationKeyIsRejected(t *testing.T) {
 			phase = canonical.PhaseContinue
 			path = append(path, input)
 		}
-		resp, state, err := app.Turn(canonical.Event{
+		resp, state, err := app.Turn(context.Background(), canonical.Event{
 			MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344", Path: path, Phase: phase,
 		}, turn, stored)
 		if err != nil {
@@ -255,5 +257,38 @@ func TestUnofferedNavigationKeyIsRejected(t *testing.T) {
 	got := send("1")
 	if !strings.HasPrefix(got.Body, "Invalid choice.") {
 		t.Errorf("screen = %q, want the invalid-choice message", got.Body)
+	}
+}
+
+// TestPostTextIsCapped: the whole timeline rides in session state, which
+// crosses the tenant webhook on every turn and is rejected above 16KB. Ten
+// unbounded posts clear that on their own.
+func TestPostTextIsCapped(t *testing.T) {
+	var long apiStatus
+	long.Content = "<p>" + strings.Repeat("台灣國語文字", 500) + "</p>"
+	long.Account.DisplayName = "Verbose"
+
+	got := toPost(long)
+	if len(got.Text) > maxPostBytes {
+		t.Errorf("post text is %d bytes, over the %d cap", len(got.Text), maxPostBytes)
+	}
+	if !strings.HasSuffix(got.Text, "...") {
+		t.Errorf("a capped post should show it was cut: %q", got.Text[max(0, len(got.Text)-20):])
+	}
+	if !utf8.ValidString(got.Text) {
+		t.Error("capping split a multi-byte character")
+	}
+
+	// A whole timeline of capped posts has to fit the gateway's reply cap.
+	posts := make([]Post, 0, timelineSize)
+	for range timelineSize {
+		posts = append(posts, got)
+	}
+	blob, err := json.Marshal(state{Posts: posts})
+	if err != nil {
+		t.Fatalf("encoding state: %v", err)
+	}
+	if len(blob) > 12<<10 {
+		t.Errorf("session state is %d bytes, too close to the 16KB reply cap", len(blob))
 	}
 }

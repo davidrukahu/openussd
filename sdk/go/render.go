@@ -39,10 +39,14 @@ func Shrink(s string) string {
 
 	runes := []rune(s)
 	// Binary search the longest prefix that still fits once the ellipsis
-	// is added. Prefix cost is not linear in rune count - one emoji can
-	// change the encoding of the whole string - so it is measured, not
-	// estimated.
-	lo, hi := 0, len(runes)
+	// is added. Prefix cost is not linear in rune count, since one emoji
+	// can change the encoding of the whole string, so it is measured
+	// rather than estimated.
+	//
+	// The search starts at the screen budget, not at the length of the
+	// input: no prefix longer than MaxScreen runes can ever fit, so
+	// probing a megabyte of text to find that out is wasted work.
+	lo, hi := 0, min(len(runes), MaxScreen)
 	for lo < hi {
 		mid := (lo + hi + 1) / 2
 		if canonical.FitsScreen(string(runes[:mid]) + ellipsis) {
@@ -120,50 +124,63 @@ func Paginate(body string, reserve int) []string {
 		return nil
 	}
 
-	var pages []string
-	remaining := strings.TrimSpace(body)
+	// The body is converted once. Walking it with an index keeps the work
+	// per page bounded by the screen size: re-slicing the remainder into a
+	// fresh string on every page made this quadratic, which showed up as
+	// milliseconds and megabytes on a single long post.
+	runes := []rune(strings.TrimSpace(body))
 
-	for remaining != "" {
-		runes := []rune(remaining)
-		fit := fitRunes(remaining, reserve)
-		if fit >= len(runes) {
-			pages = append(pages, remaining)
+	var pages []string
+	for at := 0; at < len(runes); {
+		for at < len(runes) && unicode.IsSpace(runes[at]) {
+			at++
+		}
+		if at >= len(runes) {
 			break
 		}
+
+		window := runes[at:min(at+MaxScreen, len(runes))]
+		fit := fitRunes(window, reserve)
 		if fit == 0 {
 			// Not even one character fits beside the reserve. Better to
 			// stop than to loop producing empty pages.
 			break
 		}
 
-		window := string(runes[:fit])
-		cut := breakPoint(window)
-		page := strings.TrimRightFunc(string([]rune(window)[:cut]), unicode.IsSpace)
+		// The last page is whatever is left, provided it fits whole.
+		if fit >= len(window) && at+len(window) >= len(runes) {
+			pages = append(pages, string(window))
+			break
+		}
+
+		cut := breakPoint(string(window[:fit]))
+		page := strings.TrimRightFunc(string(window[:cut]), unicode.IsSpace)
 		if page == "" {
 			// No usable break: hard-split so we always make progress.
-			page = window
-			cut = fit
+			page, cut = string(window[:fit]), fit
 		}
 
 		pages = append(pages, page)
-		remaining = strings.TrimLeftFunc(string(runes[cut:]), unicode.IsSpace)
+		at += cut
 	}
 	return pages
 }
 
-// fitRunes returns how many leading runes of s fit a screen alongside
-// reserve units, measured rather than estimated because one character can
-// change the encoding, and therefore the capacity, of the whole prefix.
-func fitRunes(s string, reserve int) int {
-	runes := []rune(s)
-
+// fitRunes returns how many leading runes fit a screen alongside reserve
+// units, measured rather than estimated because one character can change the
+// encoding, and therefore the capacity, of the whole prefix.
+//
+// The upper bound is the screen budget rather than the length of the input.
+// Searching the whole remaining body made Paginate quadratic: a long post
+// re-measured everything still to come on every page.
+func fitRunes(runes []rune, reserve int) int {
 	fits := func(n int) bool {
 		prefix := string(runes[:n])
 		cost, _ := canonical.ScreenCost(prefix)
 		return cost+reserve <= canonical.Budget(prefix)
 	}
 
-	lo, hi := 0, len(runes)
+	lo, hi := 0, min(len(runes), MaxScreen)
 	for lo < hi {
 		mid := (lo + hi + 1) / 2
 		if fits(mid) {

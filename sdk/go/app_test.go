@@ -1,6 +1,7 @@
 package openussd
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -81,7 +82,7 @@ func (d *driver) send(input string) canonical.Response {
 		d.path = append(d.path, input)
 	}
 
-	resp, state, err := d.app.Turn(canonical.Event{
+	resp, state, err := d.app.Turn(context.Background(), canonical.Event{
 		MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
 		Shortcode: "*384*1234#", Path: d.path, Phase: phase,
 	}, d.turn, d.state)
@@ -168,7 +169,7 @@ func TestEndingClearsState(t *testing.T) {
 func TestCorruptStateRestartsRatherThanFails(t *testing.T) {
 	app := pinApp(t)
 
-	resp, _, err := app.Turn(canonical.Event{
+	resp, _, err := app.Turn(context.Background(), canonical.Event{
 		MNO: "simulator", SessionID: "s1", MSISDN: "+254711223344",
 		Path: []string{"1"}, Phase: canonical.PhaseContinue,
 	}, 2, json.RawMessage(`{"screen":`))
@@ -215,7 +216,7 @@ func TestUnknownTransitionIsAnError(t *testing.T) {
 		t.Fatalf("NewApp: %v", err)
 	}
 
-	_, _, err = app.Turn(canonical.Event{Path: []string{"1"}, Phase: canonical.PhaseContinue}, 2, nil)
+	_, _, err = app.Turn(context.Background(), canonical.Event{Path: []string{"1"}, Phase: canonical.PhaseContinue}, 2, nil)
 	if err == nil || !strings.Contains(err.Error(), "unknown screen") {
 		t.Fatalf("err = %v, want an unknown-screen error", err)
 	}

@@ -22,13 +22,15 @@ Then dial from the terminal handset:
 go run ./cmd/ussdsim -shortcode '*384*1234#'
 ```
 
-Without Docker:
+Without Docker. The example config points its tenant at `http://fediverse:8081/ussd`, which is the compose service name, so override it for a host run:
 
 ```bash
 make build
-FEDIVERSE_WEBHOOK_SECRET=$(openssl rand -hex 32) ./bin/fediverse &
-FEDIVERSE_WEBHOOK_SECRET=$FEDIVERSE_WEBHOOK_SECRET \
-  ./bin/gateway -config gateway/gateway.example.yaml
+export FEDIVERSE_WEBHOOK_SECRET=$(openssl rand -hex 32)
+FEDIVERSE_LISTEN=127.0.0.1:8081 ./bin/fediverse &
+sed 's|http://fediverse:8081|http://127.0.0.1:8081|' \
+  gateway/gateway.example.yaml > /tmp/gateway.yaml
+./bin/gateway -config /tmp/gateway.yaml
 ```
 
 ## Configuration
@@ -56,7 +58,7 @@ stay out of the file.
 | `/ussd/africastalking` | Inbound callbacks, form-encoded, `CON`/`END` replies. |
 | `/ussd/simulator` | Inbound callbacks from `cmd/ussdsim`, JSON. Development only. |
 | `/healthz` | Liveness. Checks nothing external on purpose: a liveness probe that fails when Redis is down restarts a gateway that was working. |
-| `/readyz` | Readiness, plus the adapters and tenants actually loaded. |
+| `/readyz` | Readiness, the enabled adapter names, and a tenant count. It reports counts rather than the routing table: the endpoint is unauthenticated, and a list of tenants with their shortcodes and prefixes is what you would need to aim a forged callback. The full table is logged at startup. |
 
 ## Screen budget
 
@@ -107,8 +109,9 @@ allowlist empty.
 **Outbound.** Each tenant webhook is signed HMAC-SHA256 over
 `<timestamp>.<body>`, sent as `X-OpenUSSD-Signature: v1=…` with
 `X-OpenUSSD-Timestamp`. Verifiers reject anything more than five minutes
-from their own clock. The SDK does this for you; see
-[`webhook`](../webhook) for the scheme.
+from their own clock. The SDK does this for you, and
+[`docs/webhook-protocol.md`](../docs/webhook-protocol.md) has the full wire
+contract for tenants written in other languages.
 
 **MSISDN is a claim, not an identity.** The network asserts it and the
 gateway passes it along as an assertion. Anything that reaches the inbound

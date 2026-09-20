@@ -1,19 +1,24 @@
 package httpx
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/davidrukahu/openussd/canonical"
 	"github.com/davidrukahu/openussd/gateway/internal/adapter"
 	"github.com/davidrukahu/openussd/gateway/internal/adapter/africastalking"
+	"github.com/davidrukahu/openussd/gateway/internal/adapter/simulator"
 	"github.com/davidrukahu/openussd/gateway/internal/session"
 	"github.com/davidrukahu/openussd/gateway/internal/tenant"
 	"github.com/davidrukahu/openussd/webhook"
@@ -208,5 +213,185 @@ func TestRejectsUntrustedSource(t *testing.T) {
 	}
 	if store.Len() != 0 {
 		t.Error("a rejected request still allocated session state")
+	}
+}
+
+// TestSessionReuseByAnotherSubscriberStartsFresh: the session id matched but
+// the subscriber did not, so the dialogue must not inherit the stored tenant
+// or state.
+func TestSessionReuseByAnotherSubscriberStartsFresh(t *testing.T) {
+	var states []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		var in webhook.Request
+		_ = json.Unmarshal(body, &in)
+		states = append(states, string(in.State))
+		_ = json.NewEncoder(w).Encode(webhook.Reply{
+			Response: canonical.Continue("screen"),
+			State:    json.RawMessage(`{"secret":"first subscriber"}`),
+		})
+	}))
+	defer srv.Close()
+
+	store := session.NewMemory()
+	defer store.Close()
+	h := newGateway(t, srv.URL, store)
+
+	post := func(msisdn, text string) {
+		t.Helper()
+		body := strings.NewReader("sessionId=ATUid_shared&serviceCode=*384*1234%23" +
+			"&phoneNumber=" + url.QueryEscape(msisdn) + "&text=" + text)
+		req := httptest.NewRequest(http.MethodPost, "/ussd/africastalking", body)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d", rec.Code)
+		}
+	}
+
+	post("+254711223344", "")
+	post("+254700999888", "1")
+
+	if len(states) != 2 {
+		t.Fatalf("got %d deliveries, want 2", len(states))
+	}
+	if states[1] != "" {
+		t.Errorf("second subscriber received %q, want no inherited state", states[1])
+	}
+}
+
+// TestTenantHandoverClearsState: a shared shortcode hands a dialogue from its
+// menu tenant to a service tenant. The multi-tenancy promise is that the new
+// tenant cannot read what the previous one stored.
+func TestTenantHandoverClearsState(t *testing.T) {
+	var mu sync.Mutex
+	seen := map[string]string{}
+
+	serve := func(name string) *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := io.ReadAll(r.Body)
+			var in webhook.Request
+			_ = json.Unmarshal(body, &in)
+			mu.Lock()
+			seen[name] = string(in.State)
+			mu.Unlock()
+			_ = json.NewEncoder(w).Encode(webhook.Reply{
+				Response: canonical.Continue(name),
+				State:    json.RawMessage(`{"owner":"` + name + `"}`),
+			})
+		}))
+	}
+
+	menu, service := serve("menu"), serve("service")
+	defer menu.Close()
+	defer service.Close()
+
+	router, err := tenant.NewRouter([]tenant.Tenant{
+		{Name: "menu", Shortcode: "*384*1234#", WebhookURL: menu.URL, Secret: "test-secret"},
+		{Name: "service", Shortcode: "*384*1234#", Prefix: []string{"2"}, WebhookURL: service.URL, Secret: "test-secret"},
+	})
+	if err != nil {
+		t.Fatalf("NewRouter: %v", err)
+	}
+
+	store := session.NewMemory()
+	defer store.Close()
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	h := NewInbound(africastalking.New(), store, router, tenant.NewDispatcher(nil), log)
+
+	d := &dialogue{t: t, handler: h, session: "ATUid_handover"}
+	d.dial("")  // the menu tenant answers and stores its own state
+	d.dial("2") // the prefix hands the dialogue to the service tenant
+
+	mu.Lock()
+	defer mu.Unlock()
+	if got := seen["service"]; got != "" {
+		t.Errorf("service tenant received %s from the previous tenant, want nothing", got)
+	}
+}
+
+// TestTerminalPhaseReleasesTheSession: a cancelled or timed-out dialogue has
+// no handset left to render to, and must not leave state behind.
+func TestTerminalPhaseReleasesTheSession(t *testing.T) {
+	for _, phase := range []string{"cancel", "timeout"} {
+		t.Run(phase, func(t *testing.T) {
+			srv := tenantServer(t)
+			defer srv.Close()
+
+			store := session.NewMemory()
+			defer store.Close()
+
+			router, err := tenant.NewRouter([]tenant.Tenant{{
+				Name: "demo", Shortcode: "*384*1234#", WebhookURL: srv.URL, Secret: "test-secret",
+			}})
+			if err != nil {
+				t.Fatalf("NewRouter: %v", err)
+			}
+			log := slog.New(slog.NewTextHandler(io.Discard, nil))
+			h := NewInbound(simulator.New(), store, router, tenant.NewDispatcher(nil), log)
+
+			send := func(body string) *httptest.ResponseRecorder {
+				rec := httptest.NewRecorder()
+				h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/ussd/simulator", strings.NewReader(body)))
+				return rec
+			}
+
+			if rec := send(`{"session_id":"SIM_1","msisdn":"+254711223344","shortcode":"*384*1234#"}`); rec.Code != http.StatusOK || store.Len() != 1 {
+				t.Fatalf("setup: status = %d, sessions = %d", rec.Code, store.Len())
+			}
+
+			rec := send(`{"session_id":"SIM_1","msisdn":"+254711223344","shortcode":"*384*1234#","path":["1"],"phase":"` + phase + `"}`)
+			if rec.Code != http.StatusOK {
+				t.Errorf("status = %d, want 200", rec.Code)
+			}
+			if rec.Body.Len() != 0 {
+				t.Errorf("body = %q, want nothing rendered to an absent handset", rec.Body.String())
+			}
+			if store.Len() != 0 {
+				t.Errorf("%s left %d sessions behind", phase, store.Len())
+			}
+		})
+	}
+}
+
+// failSaveStore fails only on Save, to exercise the path where a screen was
+// produced but the next turn would have no state to continue from.
+type failSaveStore struct {
+	session.Store
+}
+
+func (failSaveStore) Save(context.Context, session.Session) error {
+	return errors.New("session store unavailable")
+}
+
+func TestSaveFailureFailsTheDialogue(t *testing.T) {
+	srv := tenantServer(t)
+	defer srv.Close()
+
+	mem := session.NewMemory()
+	defer mem.Close()
+
+	d := &dialogue{t: t, handler: newGateway(t, srv.URL, failSaveStore{Store: mem}), session: "ATUid_nosave"}
+	if got := d.dial(""); got != "END "+userFacingError {
+		t.Errorf("screen = %q, want the generic failure screen rather than a menu the next turn cannot follow", got)
+	}
+}
+
+func TestMalformedRequestIsRejected(t *testing.T) {
+	srv := tenantServer(t)
+	defer srv.Close()
+
+	store := session.NewMemory()
+	defer store.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/ussd/africastalking", strings.NewReader("sessionId=%zz"))
+	rec := httptest.NewRecorder()
+	newGateway(t, srv.URL, store).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400 for a body the adapter cannot parse", rec.Code)
+	}
+	if store.Len() != 0 {
+		t.Error("an unparseable request still allocated session state")
 	}
 }
