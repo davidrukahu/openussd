@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      # The race detector matters here: one gateway process serves many
+      # concurrent dialogues through a shared session store.
+      - name: Test
+        run: go test -race -cover ./...
+
+      # Built through make, which writes into bin/. A bare
+      # "go build ./gateway/cmd/gateway" tries to write a binary named
+      # "gateway" over the gateway/ directory and fails.
+      - name: Build binaries
+        run: make build
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+      # v9 installs the v2 linter, which is what .golangci.yml is written
+      # against. v6 pins the v1 line and rejects a v2 config outright.
+      - uses: golangci/golangci-lint-action@v9

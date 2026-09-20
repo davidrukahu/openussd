@@ -1,0 +1,40 @@
+# OpenUSSD gateway configuration.
+#
+# ${NAME} is expanded from the environment at load time, and an unset
+# variable is a startup error - secrets belong in the environment, not in
+# this file.
+
+listen: ":8080"
+log_level: "info"
+
+session:
+  # "memory" is correct for a single replica. Use "redis" as soon as there
+  # is more than one, or half of each dialogue lands on the wrong process.
+  backend: "memory"
+  # redis_url: "redis://redis:6379/0"
+  ttl: 180s
+
+adapters:
+  # The local handset in cmd/ussdsim. Development only: it performs no
+  # authenticity checks at all. Do not enable it on a public deployment.
+  simulator:
+    enabled: true
+
+  # Africa's Talking signs nothing, so the allowlist is the only thing
+  # standing between the endpoint and forged subscriber input. Replace
+  # these with the source ranges the provider publishes for your account
+  # before exposing the gateway.
+  africastalking:
+    enabled: false
+    allowed_sources:
+      - "196.201.214.0/24"
+    # Your own ingress or load balancer - the only hops allowed to set
+    # X-Forwarded-For.
+    trusted_forwarders: []
+
+tenants:
+  - name: "fediverse"
+    shortcode: "*384*1234#"
+    webhook_url: "http://fediverse:8081/ussd"
+    secret: "${FEDIVERSE_WEBHOOK_SECRET}"
+    timeout: 5s

@@ -1,0 +1,6 @@
+POST /ussd/africastalking HTTP/1.1
+Host: gateway.example
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 116
+
+sessionId=ATUid_1122334455&serviceCode=*384*1234%23&phoneNumber=%2B254700111222&networkCode=63902&text=2*hello+world

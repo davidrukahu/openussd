@@ -1,0 +1,9 @@
+{
+  "mno": "africastalking",
+  "session_id": "ATUid_1122334455",
+  "msisdn": "+254700111222",
+  "shortcode": "*384*1234#",
+  "path": ["2", "hello world"],
+  "phase": "continue",
+  "network_code": "63902"
+}
