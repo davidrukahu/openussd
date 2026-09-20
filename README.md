@@ -2,6 +2,8 @@
 
 > An open gateway and SDK for the feature-phone web.
 
+[openussd.lovable.app](https://openussd.lovable.app)
+
 OpenUSSD is an open-source gateway and software development kit that makes web services accessible from feature phones over USSD and SMS.
 
 A working vertical slice is in this repository: you can dial a shortcode from your terminal and read a Mastodon timeline, with no telco account.

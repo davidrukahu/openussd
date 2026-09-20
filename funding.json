@@ -17,7 +17,7 @@
       "name": "OpenUSSD",
       "description": "An open-source gateway and SDK that makes web services accessible from feature phones over USSD and SMS. Three components: a self-hostable gateway speaking USSD/SMS protocols with multi-tenant routing and per-MNO telco adapters; SDKs in Go and TypeScript for building USSD applications as state machines with typed sessions, i18n, and 182-character-per-screen handling; and a reference adapter that exposes ActivityPub Fediverse content (Mastodon, PeerTube, PixelFed) through USSD menus. Targets the ~1.1B feature-phone users in Sub-Saharan Africa and South Asia and provides a maintained replacement for Praekelt's abandoned Vumi.",
       "webpageUrl": {
-        "url": "https://github.com/davidrukahu/openussd"
+        "url": "https://openussd.lovable.app"
       },
       "repositoryUrl": {
         "url": "https://github.com/davidrukahu/openussd"
