@@ -87,7 +87,7 @@ func (t *TrustedProxy) Render(w http.ResponseWriter, resp canonical.Response) er
 func (t *TrustedProxy) Verify(r *http.Request) error {
 	addr, err := t.clientAddr(r)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrUntrusted, err)
+		return fmt.Errorf("%w: %w", ErrUntrusted, err)
 	}
 	if !containsAddr(t.Allowed, addr) {
 		return fmt.Errorf("%w: source %s is not in the allowlist", ErrUntrusted, addr)

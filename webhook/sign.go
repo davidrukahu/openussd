@@ -60,7 +60,7 @@ var ErrInvalidSignature = errors.New("webhook: invalid signature")
 // Signature computes the signature for a body at a point in time.
 func Signature(secret string, ts time.Time, body []byte) string {
 	mac := hmac.New(sha256.New, []byte(secret))
-	fmt.Fprintf(mac, "%d.", ts.Unix())
+	mac.Write([]byte(strconv.FormatInt(ts.Unix(), 10) + "."))
 	mac.Write(body)
 	return SchemeV1 + "=" + hex.EncodeToString(mac.Sum(nil))
 }
