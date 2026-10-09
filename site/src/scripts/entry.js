@@ -7,6 +7,7 @@ import { init as whycards } from './why-cards.js';
 import { init as delegation } from './delegation.js';
 import { init as howitworks } from './how-it-works.js';
 import { init as faq } from './faq.js';
+import { init as externalLinks } from './external-links.js';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 nav(reduced);
@@ -16,3 +17,4 @@ whycards(reduced);
 delegation(reduced);
 howitworks(reduced);
 faq(reduced);
+externalLinks();
