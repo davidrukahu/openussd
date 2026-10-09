@@ -1,8 +1,8 @@
 # TODOS
 
-Work that is deliberately deferred, with the reason. Milestones M1 to M6
-live in [GitHub issues](https://github.com/davidrukahu/openussd/issues);
-this file is for decisions taken during implementation.
+Work that is deliberately deferred, with the reason. The plan lives in
+[`ROADMAP.md`](ROADMAP.md); this file is for decisions taken during
+implementation.
 
 ## Telco adapters
 

@@ -41,7 +41,7 @@ Per-component notes:
 - `sdk/go/` - Go module; [README](sdk/go/README.md) has a whole application in one snippet.
 - `adapters/fediverse/` - Go, built on the SDK. Needs `FEDIVERSE_WEBHOOK_SECRET` matching the gateway's tenant config.
 - `cmd/ussdsim/` - the terminal handset. No dependencies.
-- `sdk/typescript/` - not yet started (milestone M3).
+- `sdk/typescript/` - not yet started (task 4.1 in [`ROADMAP.md`](ROADMAP.md)).
 
 ## Coding standards
 

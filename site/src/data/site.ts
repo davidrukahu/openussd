@@ -119,11 +119,7 @@ export const faqs: FaqItem[] = [
   },
   {
     q: 'How is it funded?',
-    a: 'It is unfunded. An application to the NLnet NGI Zero Commons Fund is in second-round review.',
-  },
-  {
-    q: 'Was AI used to build it?',
-    a: `Yes, and <a href="${repo}#how-this-project-uses-ai-tools">the README says how</a>. The maintainer designed the architecture, the protocol and the RFCs, and directs and reviews every change. Much of the v0.1 Go implementation and this website were written with Claude Code. Grant-funded code will be written by people. AI tools may help with review, research and documentation, and any such use is disclosed.`,
+    a: `It is unfunded so far, and looking for funding. <a href="${blob}/ROADMAP.md">The roadmap</a> sets out what funding would pay for, task by task.`,
   },
 ];
 
