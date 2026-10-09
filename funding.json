@@ -15,9 +15,9 @@
     {
       "guid": "openussd",
       "name": "OpenUSSD",
-      "description": "An open-source gateway and SDK that makes web services accessible from feature phones over USSD and SMS. Three components: a self-hostable gateway speaking USSD/SMS protocols with multi-tenant routing and per-MNO telco adapters; SDKs in Go and TypeScript for building USSD applications as state machines with typed sessions, i18n, and 182-character-per-screen handling; and a reference adapter that exposes ActivityPub Fediverse content (Mastodon, PeerTube, PixelFed) through USSD menus. Targets the ~1.1B feature-phone users in Sub-Saharan Africa and South Asia and provides a maintained replacement for Praekelt's abandoned Vumi.",
+      "description": "An open-source gateway and SDK that makes web services accessible from feature phones over USSD, with SMS planned. Three components: a self-hostable gateway with multi-tenant routing and one telco-adapter interface over networks and aggregators; SDKs for building USSD applications as state machines with typed sessions, i18n, and screens measured in the encoding the network uses (182 GSM-7 characters, or 70 UCS-2); and a reference adapter that exposes ActivityPub Fediverse content through USSD menus. v0.1 ships the gateway, the Go SDK and a read-only Mastodon adapter; a TypeScript SDK is planned. Aimed at Sub-Saharan Africa, where 60% of mobile internet subscribers still use feature phones or 3G smartphones (GSMA 2025).",
       "webpageUrl": {
-        "url": "https://openussd.lovable.app"
+        "url": "https://openussd.org"
       },
       "repositoryUrl": {
         "url": "https://github.com/davidrukahu/openussd"
@@ -55,7 +55,7 @@
         "guid": "core-development-year-1",
         "status": "active",
         "name": "Year-1 core development",
-        "description": "12 months of focused work on the gateway, Go and TypeScript SDKs, the Fediverse reference adapter, two telco adapters (Safaricom, MTN), an independent security audit, developer documentation, translation into French and Swahili, and direct costs (MNO sandbox fees, test devices, CI, hosting). Delivers a v1.0 release a single developer can self-host in an afternoon.",
+        "description": "12 months of focused work on the gateway, Go and TypeScript SDKs, the Fediverse reference adapter, further telco adapters (MTN, SMPP, and Safaricom direct once a commercial agreement allows), an independent security audit, developer documentation, translation into French and Swahili, and direct costs (MNO sandbox fees, test devices, CI, hosting). Delivers a v1.0 release a single developer can self-host in an afternoon.",
         "amount": 50000,
         "currency": "EUR",
         "frequency": "one-time",

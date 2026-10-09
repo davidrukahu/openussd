@@ -12,7 +12,7 @@ This document describes how the three OpenUSSD components fit together: the **ga
 ```
               +-------------------+        +---------------------+
               |   Feature phone   |        |  Smartphone /       |
-              |   (USSD / SMS)    |        |  fediverse client   |
+              |  (USSD; SMS later)|        |  fediverse client   |
               +---------+---------+        +----------+----------+
                         |                             |
                         | USSD session (MNO)          | ActivityPub
@@ -29,7 +29,7 @@ This document describes how the three OpenUSSD components fit together: the **ga
             |   OpenUSSD Gateway     |                |
             |  ┌──────────────────┐  |                |
             |  │ Telco adapter    │  |  canonical     |
-            |  │  layer (Saf/MTN) │--┼-- session ---->|
+            |  │  layer (AT, MTN) │--┼-- session ---->|
             |  └────────┬─────────┘  |   events       |
             |           v            |                |
             |  ┌──────────────────┐  |                |
@@ -67,10 +67,10 @@ This document describes how the three OpenUSSD components fit together: the **ga
 
 A self-hostable Go service. Responsibilities:
 
-- **Telco adapter layer.** Per-MNO HTTP handlers (Safaricom Daraja, MTN, Airtel, …) that accept the MNO's native callback format and translate it into a single canonical session event the rest of the system understands. Each adapter is a small package implementing one interface; adding an MNO is one new file plus contract tests.
+- **Telco adapter layer.** Per-network or per-aggregator handlers (Africa's Talking today; MTN and SMPP planned) that accept the network's or aggregator's native callback format and translate it into a single canonical session event the rest of the system understands. Each adapter is a small package implementing one interface; adding an MNO is one new file plus contract tests.
 - **Session store.** Each USSD screen is an independent HTTP request; the gateway maintains continuity across screens. Sessions are addressed by `(mno, session_id)` and carry an opaque blob owned by the application. The default backing store is in-process memory, which is correct for a single replica and is what the demo runs on. Redis is the option for more than one replica, since two replicas would otherwise each hold half of every conversation. A durable Postgres audit store is designed for but not built. Session timeout default 180s of user inactivity.
 - **Tenant router.** Most African shortcodes are shared. The gateway routes `(shortcode, sub-prefix)` to a tenant configuration and forwards the canonical event to that tenant's webhook URL. Per-tenant secrets sign outbound webhooks so applications can verify the request origin.
-- **Outbound channels.** SMS and (later) USSD push for asynchronous notifications. Same telco-adapter abstraction as inbound.
+- **Outbound channels (planned).** SMS and USSD push for asynchronous notifications. Same telco-adapter abstraction as inbound.
 - **Observability.** Structured logs, per-tenant metrics, sampled session traces. The audit log is the source of truth for "what did the user actually see?".
 
 License: AGPL-3.0-or-later.
@@ -130,7 +130,10 @@ Year-1 targets:
   registered Kenyan entity, so it belongs in the funded phase. Note that
   Daraja, named in earlier drafts, is the M-Pesa API portal and exposes no
   USSD. See [`telco-access.md`](telco-access.md).
-- **MTN USSD** (one of Uganda / Nigeria sandboxes - to be picked once sandbox access is confirmed)
+- **MTN USSD** - against MTN's published USSD API, in one market once
+  access is confirmed.
+- **SMPP** - the protocol many aggregators and operators use between
+  themselves, so one adapter can reach several providers.
 
 Architectural placeholder for SS7-level signaling exists but is out of scope for v1.
 
