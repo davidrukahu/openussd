@@ -5,18 +5,18 @@
 const steps = [
   {
     label: 'Dial',
-    title: 'A handset dials *384*1234#',
-    body: 'Any phone with a SIM. The network, or an aggregator in front of it, posts each step of the session to the gateway in its own callback format.',
+    title: 'A phone dials *384*1234#',
+    body: 'Any phone with a SIM card. The phone company, or a company in front of it such as Africa\'s Talking, sends each step to OpenUSSD in its own format.',
   },
   {
-    label: 'Gateway',
-    title: 'OpenUSSD turns it into one canonical event',
-    body: "A telco adapter turns the network's callback into a canonical event, the session store keeps state between screens, and the tenant router signs a webhook to the service that owns the shortcode.",
+    label: 'OpenUSSD',
+    title: 'OpenUSSD translates it',
+    body: "It turns each phone company's format into one standard message, remembers where the person is in the menu, and sends the message to the app that owns the code, signed so the app knows it is genuine.",
   },
   {
-    label: 'Your service',
-    title: 'Your service answers in any language',
-    body: 'It verifies the signature and replies with the next screen. The Go SDK builds screens and keeps each one inside the handset budget; a TypeScript SDK is planned.',
+    label: 'Your app',
+    title: 'Your app answers with the next screen',
+    body: 'It can be written in any programming language. A toolkit for Go helps keep every screen short enough for a phone; one for TypeScript is planned.',
   },
 ];
 ---
@@ -24,7 +24,7 @@ const steps = [
   <header class="hiw__header">
     <p class="badge">How it works</p>
     <h2 class="h2 h2--center" id="how-title">
-      From keypad to web service.&nbsp;<em>In three hops.</em>
+      From a keypad to your app.&nbsp;<em>In three steps.</em>
     </h2>
   </header>
 
@@ -41,26 +41,26 @@ const steps = [
       <ol class="flow">
         <li class="flow__node" data-step="0">
           <p class="flow__kicker">1. Dial</p>
-          <p class="flow__name">Handset</p>
+          <p class="flow__name">Any phone</p>
           <p class="flow__mono">*384*1234#</p>
-          <p class="flow__sub">network or aggregator</p>
+          <p class="flow__sub">through the phone company</p>
         </li>
-        <li class="flow__link" aria-hidden="true"><span>native callback</span></li>
+        <li class="flow__link" aria-hidden="true"><span>its own format</span></li>
         <li class="flow__node flow__node--gateway" data-step="1">
-          <p class="flow__kicker">2. Gateway</p>
-          <p class="flow__name">OpenUSSD gateway</p>
+          <p class="flow__kicker">2. OpenUSSD</p>
+          <p class="flow__name">OpenUSSD</p>
           <ul class="flow__rows">
-            <li><b>telco adapter</b> canonical event</li>
-            <li><b>session store</b> memory or Redis</li>
-            <li><b>tenant router</b> shortcode, menu</li>
+            <li><b>translates</b> one standard message</li>
+            <li><b>remembers</b> where they are</li>
+            <li><b>routes</b> to the right app</li>
           </ul>
         </li>
-        <li class="flow__link" aria-hidden="true"><span>HMAC-signed webhook</span></li>
+        <li class="flow__link" aria-hidden="true"><span>signed message</span></li>
         <li class="flow__node" data-step="2">
-          <p class="flow__kicker">3. Your service</p>
-          <p class="flow__name">Your service</p>
+          <p class="flow__kicker">3. Your app</p>
+          <p class="flow__name">Your app</p>
           <p class="flow__mono">any language</p>
-          <p class="flow__sub">Go SDK today, TypeScript planned</p>
+          <p class="flow__sub">Go toolkit today, TypeScript planned</p>
         </li>
       </ol>
 

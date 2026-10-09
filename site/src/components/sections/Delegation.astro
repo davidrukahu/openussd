@@ -8,22 +8,22 @@ const features = [
   {
     step: 0,
     label: 'Dial a shortcode',
-    desc: 'Dial the shortcode. The gateway routes it to its tenant, here the Fediverse reference adapter. This menu is exactly what the Africa\'s Talking sandbox received on 9 October 2026.',
+    desc: 'Someone dials the code. OpenUSSD passes it to the app that owns the code, here a demo that reads Mastodon. This exact menu reached Africa\'s Talking\'s test system on 9 October 2026.',
   },
   {
     step: 1,
-    label: 'Page through posts',
-    desc: 'Display names lose their emoji, so the list stays GSM-7 and more posts fit on one screen.',
+    label: 'Read the latest posts',
+    desc: 'Press 1 for the latest posts. Emoji are taken out of names, so the screen stays in plain letters and more posts fit.',
   },
   {
     step: 2,
     label: 'Fit the screen',
-    desc: 'A Swahili post ends in an emoji. The text stays GSM-7 and gets the full 182; only the screen holding the emoji pays for UCS-2, where the budget is 70.',
+    desc: 'A screen holds 182 plain letters, but only 70 once it contains an emoji or a non-Latin letter. OpenUSSD measures every screen, so this Swahili post is split into pages instead of being cut off.',
   },
   {
     step: 3,
-    label: 'Hand over to SMS (planned)',
-    desc: 'Not in v0.1. A USSD screen holds 182 characters at most; SMS is how a flow will hand over anything longer, such as a link or a full post.',
+    label: 'Send the rest by SMS (planned)',
+    desc: 'Not built yet. A USSD screen is short, so anything longer, such as a link or a full post, will be sent by SMS.',
   },
 ];
 
@@ -47,12 +47,12 @@ const sims = simOrder
   <header class="delegation__header">
     <div class="delegation__heading">
       <p class="badge">A real session</p>
-      <h2 class="h2" id="delegation-title">Write it once.<br /><em>Run it on every network.</em></h2>
+      <h2 class="h2" id="delegation-title">What it looks like<br /><em>on a phone.</em></h2>
     </div>
     <p class="delegation__lede">
-      Your service answers one signed webhook. An adapter underneath speaks
-      each network's own format: Africa's Talking today, MTN and SMPP
-      planned. These screens are v0.1's real output.
+      These are real screens from the current version, step by step. Your
+      app answers in one simple format, and OpenUSSD handles each phone
+      company's own format underneath.
     </p>
   </header>
 
@@ -102,9 +102,9 @@ const sims = simOrder
               <p class="planned__tag"><i aria-hidden="true"></i>Planned, not built</p>
               <p class="planned__title">SMS hand-over</p>
               <p class="planned__body">
-                v0.1 speaks USSD only. SMS send and receive, and a way for a
-                USSD flow to send something longer by SMS, are on the plan for
-                a later release.
+                The current version does USSD menus only. Sending and
+                receiving SMS, and sending something longer by SMS from a
+                menu, are planned for a later release.
               </p>
             </div>
           )}
@@ -114,9 +114,8 @@ const sims = simOrder
   </div>
 
   <p class="delegation__note">
-    From <code>cmd/ussdsim</code>, the terminal handset that ships with the
-    gateway. The posts are demo data served by a local test instance; every
-    screen and budget figure is the gateway's own output.
+    Screens from the test phone that comes with OpenUSSD. The posts are
+    sample data; every screen and character count is OpenUSSD's real output.
   </p>
 
   {sims.length > 0 && (
