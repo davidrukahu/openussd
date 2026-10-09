@@ -103,7 +103,7 @@ export interface FaqItem { q: string; a: string }
 export const faqs: FaqItem[] = [
   {
     q: 'What is USSD?',
-    a: 'The menu you get when you dial a code like *334# for M-Pesa. You reply with a number. It works on every phone, with no app and no internet.',
+    a: 'The menu you get when you dial a short code, for example to check your airtime balance or buy a data bundle. You reply with a number. It works on every phone, with no app and no internet.',
   },
   {
     q: 'Who is OpenUSSD for?',
