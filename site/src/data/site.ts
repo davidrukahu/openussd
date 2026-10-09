@@ -8,7 +8,7 @@ export const tree = `${repo}/tree/main`;
 export const codeberg = 'https://codeberg.org/davidrukahu/openussd';
 export const issue = (n: number) => `${repo}/issues/${n}`;
 
-export const title = 'OpenUSSD: the open web, on any phone';
+export const title = 'OpenUSSD: reach any phone with a *123# menu';
 export const description =
   'Free, open-source software that lets any organisation build a USSD menu, the *123# kind that works on every phone without internet, once for every network.';
 
@@ -103,31 +103,31 @@ export interface FaqItem { q: string; a: string }
 export const faqs: FaqItem[] = [
   {
     q: 'What is USSD?',
-    a: 'It is the menu you get when you dial a code such as *334# for M-Pesa or *144# for your airtime balance. You reply with a number, and the next screen appears. It works on every mobile phone, needs no app and no internet, and costs the user little or nothing.',
+    a: 'The menu you get when you dial a code like *334# for M-Pesa. You reply with a number. It works on every phone, with no app and no internet.',
   },
   {
     q: 'Who is OpenUSSD for?',
-    a: 'Organisations that want to reach people on basic phones, such as clinics, schools, savings groups, co-ops and local government, and the developers who build services for them. People who dial a code never see OpenUSSD; they just see the menu.',
+    a: 'Clinics, schools, savings groups, co-ops, local government, and the developers who build for them. People who dial the code only see the menu.',
   },
   {
     q: 'Do I need an agreement with a phone company?',
-    a: `Not to build and test. The test phone that comes with OpenUSSD and the free Africa's Talking test system need no agreement. To go live you need an agreement with Africa's Talking or a phone company; <a href="${blob}/docs/telco-access.md">getting USSD access in practice</a> explains what is possible today.`,
+    a: `Not to build and test. To go live, you need an agreement with Africa's Talking or a phone company. <a href="${blob}/docs/telco-access.md">Here is what is possible today</a>.`,
   },
   {
     q: 'Which networks does it support?',
-    a: `Africa's Talking today, which reaches networks in Kenya, Uganda, Nigeria, Rwanda, Tanzania and Malawi. MTN and others are planned. See <a href="${blob}/docs/telco-access.md">the network guide</a>.`,
+    a: `Africa's Talking today, which reaches Kenya, Uganda, Nigeria, Rwanda, Tanzania and Malawi. MTN and others are planned.`,
   },
   {
     q: 'Is it ready to use with real people?',
-    a: 'Not yet. This is an early version that works from end to end, and parts of it will change before version 1.0. See <a href="#limitations">known limitations</a>.',
+    a: 'Not yet. It is an early version, and parts will change before version 1.0. See <a href="#limitations">known limitations</a>.',
   },
   {
     q: 'What does it cost?',
-    a: `OpenUSSD is free, open-source software under <a href="${blob}/LICENSE">AGPL-3.0-or-later</a>. Running it costs whatever your hosting and Africa's Talking or your phone company charge per session.`,
+    a: `The software is free (<a href="${blob}/LICENSE">AGPL-3.0</a>). You pay only for hosting, and for each session Africa's Talking or a phone company charges.`,
   },
   {
     q: 'How is it funded?',
-    a: `It is unfunded so far, and looking for funding. <a href="${blob}/ROADMAP.md">The roadmap</a> sets out what funding would pay for, task by task.`,
+    a: `It is unfunded so far. <a href="${blob}/ROADMAP.md">The roadmap</a> shows what funding would pay for.`,
   },
 ];
 

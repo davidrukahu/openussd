@@ -8,22 +8,22 @@ const features = [
   {
     step: 0,
     label: 'Dial a shortcode',
-    desc: 'Someone dials the code. OpenUSSD passes it to the app that owns the code, here a demo that reads Mastodon. This exact menu reached Africa\'s Talking\'s test system on 9 October 2026.',
+    desc: 'Someone dials the code and OpenUSSD sends it to the right app. This exact menu was tested with Africa\'s Talking on 9 October 2026.',
   },
   {
     step: 1,
     label: 'Read the latest posts',
-    desc: 'Press 1 for the latest posts. Emoji are taken out of names, so the screen stays in plain letters and more posts fit.',
+    desc: 'Press 1 for the latest posts. Emoji are removed from names, so more posts fit.',
   },
   {
     step: 2,
     label: 'Fit the screen',
-    desc: 'A screen holds 182 plain letters, but only 70 once it contains an emoji or a non-Latin letter. OpenUSSD measures every screen, so this Swahili post is split into pages instead of being cut off.',
+    desc: 'A screen holds 182 plain letters, or 70 with an emoji. OpenUSSD splits long posts into pages instead of cutting them off.',
   },
   {
     step: 3,
     label: 'Send the rest by SMS (planned)',
-    desc: 'Not built yet. A USSD screen is short, so anything longer, such as a link or a full post, will be sent by SMS.',
+    desc: 'Not built yet. Anything too long for a screen, such as a link, will go by SMS.',
   },
 ];
 
@@ -50,9 +50,7 @@ const sims = simOrder
       <h2 class="h2" id="delegation-title">What it looks like<br /><em>on a phone.</em></h2>
     </div>
     <p class="delegation__lede">
-      These are real screens from the current version, step by step. Your
-      app answers in one simple format, and OpenUSSD handles each phone
-      company's own format underneath.
+      Real screens from the current version, step by step.
     </p>
   </header>
 
@@ -102,9 +100,8 @@ const sims = simOrder
               <p class="planned__tag"><i aria-hidden="true"></i>Planned, not built</p>
               <p class="planned__title">SMS hand-over</p>
               <p class="planned__body">
-                The current version does USSD menus only. Sending and
-                receiving SMS, and sending something longer by SMS from a
-                menu, are planned for a later release.
+                Today OpenUSSD does USSD menus only. SMS is planned for a
+                later release.
               </p>
             </div>
           )}
@@ -114,8 +111,7 @@ const sims = simOrder
   </div>
 
   <p class="delegation__note">
-    Screens from the test phone that comes with OpenUSSD. The posts are
-    sample data; every screen and character count is OpenUSSD's real output.
+    Screens from the test phone that comes with OpenUSSD, using sample posts.
   </p>
 
   {sims.length > 0 && (
