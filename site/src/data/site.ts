@@ -110,6 +110,10 @@ export const faqs: FaqItem[] = [
     a: 'Clinics, schools, savings groups, co-ops, local government, and the developers who build for them. People who dial the code only see the menu.',
   },
   {
+    q: 'Why not just use a USSD provider, such as Africa\'s Talking?',
+    a: 'You still use one. A provider connects you to the phone networks, but you build the menu yourself, in that provider\'s own format. OpenUSSD does the hard parts once, such as remembering each step, fitting every screen and checking where requests come from. It also lets you change or add providers without rewriting your menu. Today it supports Africa\'s Talking; more providers are planned.',
+  },
+  {
     q: 'Do I need an agreement with a phone company?',
     a: `Not to build and test. To go live, you need an agreement with Africa's Talking or a phone company. <a href="${blob}/docs/telco-access.md">Here is what is possible today</a>.`,
   },
