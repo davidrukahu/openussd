@@ -1,0 +1,35 @@
+---
+/**
+ * Page head. No Open Graph image: the template's card shows its own product,
+ * so the site goes without one rather than borrowing it.
+ */
+export interface Props {
+  title: string;
+  description: string;
+  path: string;
+  /** Keep a page out of search results (the 404). */
+  noindex?: boolean;
+}
+const { title, description, path, noindex = false } = Astro.props;
+const canonical = new URL(path, Astro.site).href;
+---
+<meta charset="UTF-8" />
+<meta name="generator" content={Astro.generator} />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f7f7f4" />
+<meta name="color-scheme" content="light" />
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="OpenUSSD" />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preload" href="/assets/hero.jpg" as="image" />

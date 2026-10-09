@@ -1,0 +1,52 @@
+---
+import { working, notYet, limitations, repo, blob, issue } from '../../data/site';
+/* Takes the place of the template's testimonials and pricing. Styled on its
+   pricing cards: the first column carries the warm painting, as the
+   template's featured plan does. */
+---
+<section class="status" id="status" aria-labelledby="status-title">
+  <header class="status__header">
+    <div class="status__heading">
+      <p class="badge">Status</p>
+      <h2 class="h2" id="status-title">v0.1 works end to end.<br /><em>It is not production.</em></h2>
+    </div>
+    <p class="status__lede">
+      Free and open source under AGPL-3.0-or-later. Interfaces will change
+      before 1.0. What runs today, what does not yet, and what to watch for:
+    </p>
+  </header>
+
+  <div class="scards">
+    <article class="scard scard--featured" aria-labelledby="st-working">
+      <h3 class="scard__name" id="st-working">Working in v0.1</h3>
+      <ul class="scard__list">
+        {working.map(([text, href, label]) => (
+          <li><i aria-hidden="true"></i><span>{text}{href && <> (<a href={href}>{label}</a>)</>}</span></li>
+        ))}
+      </ul>
+    </article>
+    <article class="scard" aria-labelledby="st-notyet">
+      <h3 class="scard__name" id="st-notyet">Not yet</h3>
+      <ul class="scard__list scard__list--off">
+        {notYet.map(([text, href, label]) => (
+          <li><i aria-hidden="true"></i><span>{text}{href && <> (<a href={href}>{label}</a>)</>}</span></li>
+        ))}
+      </ul>
+    </article>
+    <article class="scard" id="limitations" aria-labelledby="st-limits">
+      <h3 class="scard__name" id="st-limits">Known limitations</h3>
+      <ul class="scard__list scard__list--text">
+        {limitations.map((l) => <li><i aria-hidden="true"></i><span>{l}</span></li>)}
+      </ul>
+    </article>
+  </div>
+
+  <p class="status__note">
+    Work is planned in <a href={`${repo}/milestones`}>GitHub milestones</a>{' '}
+    and deliberate deferrals are recorded in <a href={`${blob}/TODOS.md`}>TODOS.md</a>.
+    Contributions are welcome: see the <a href={`${blob}/CONTRIBUTING.md`}>guide</a>{' '}
+    and <a href={`${blob}/CODE_OF_CONDUCT.md`}>code of conduct</a>. If you have
+    integrated against an African network, <a href={issue(11)}>#11</a>{' '}wants to
+    hear what surprised you.
+  </p>
+</section>

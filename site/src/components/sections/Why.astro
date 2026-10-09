@@ -1,0 +1,98 @@
+---
+import { screens } from '../../data/site';
+/* The template's benefit cards, with its product screenshots replaced by
+   small panels drawn in the same style from OpenUSSD's own facts. */
+const benefits = [
+  {
+    num: '01',
+    mosaic: '/assets/mosaic-a.png',
+    title: 'Self-hosted',
+    desc: 'One binary on your own server, started with Docker Compose or built from source. Sessions live in memory; add Redis when you run more than one replica.',
+    art: 'host',
+  },
+  {
+    num: '02',
+    mosaic: '/assets/mosaic-d.png',
+    title: 'One adapter interface',
+    desc: "Write the service once and change networks underneath it. Africa's Talking today; MTN and SMPP are planned.",
+    art: 'adapters',
+  },
+  {
+    num: '03',
+    mosaic: '/assets/mosaic-b.png',
+    title: 'Encoding-aware screens',
+    desc: 'A screen holds 182 GSM-7 characters, or 70 the moment a character outside the GSM alphabet appears: many accented letters, any non-Latin script, any emoji. The SDK measures every screen.',
+    art: 'budget',
+  },
+  {
+    num: '04',
+    mosaic: '/assets/mosaic-c.png',
+    title: 'A bridge to the federated web',
+    desc: 'The reference adapter reads a Mastodon public timeline from a *384*1234# menu, paginated to fit the handset.',
+    art: 'fedi',
+  },
+];
+const active = '02';
+---
+<section class="why" id="why" aria-labelledby="why-title">
+  <header class="why__header">
+    <div class="why__heading">
+      <p class="badge">Why OpenUSSD</p>
+      <h2 class="h2" id="why-title">One open layer,<br />not one integration per telco</h2>
+    </div>
+    <p class="why__lede">
+      In Sub-Saharan Africa, 60% of mobile internet subscribers still use a
+      feature phone or a 3G smartphone
+      (<a href="https://www.gsma.com/somic/wp-content/uploads/2025/09/The-State-of-Mobile-Internet-Connectivity-2025-Overview-Report.pdf">GSMA, 2025</a>).
+      For them a USSD shortcode is often the only way to reach a service.
+    </p>
+  </header>
+
+  <ul class="why-cards" id="why-cards">
+    {benefits.map((b) => (
+      <li class={`wcard${b.num === active ? ' is-active' : ''}`} data-index={b.num} tabindex="0">
+        <div class="wcard__closed" aria-hidden="true">
+          <p class="wcard__number">{b.num}.</p>
+          <div class="wcard__mosaic"><img src={b.mosaic} alt="" loading="lazy" /></div>
+          <p class="wcard__title-closed">{b.title}</p>
+        </div>
+        <div class="wcard__open">
+          <div class={`wcard__img wart wart--${b.art}`} aria-hidden="true">
+            {b.art === 'host' && (
+              <>
+                <span class="wart__chip wart__chip--mono">docker compose up --build</span>
+                <span class="wart__row"><i class="wart__dot"></i>gateway<span class="wart__muted">one binary</span></span>
+                <span class="wart__row"><i class="wart__dot wart__dot--off"></i>Redis<span class="wart__muted">optional</span></span>
+              </>
+            )}
+            {b.art === 'adapters' && (
+              <>
+                <span class="wart__tiles">
+                  <span class="wart__tile is-on">Africa's<br />Talking</span>
+                  <span class="wart__dots"></span>
+                  <span class="wart__tile">MTN</span>
+                  <span class="wart__dots"></span>
+                  <span class="wart__tile">SMPP</span>
+                </span>
+                <span class="wart__pill"><i class="wart__dot"></i>live today<i class="wart__dot wart__dot--off"></i>planned</span>
+              </>
+            )}
+            {b.art === 'budget' && (
+              <>
+                <span class="wart__meter"><b>GSM-7</b><span class="wart__bar"><i style="width:85.7%"></i></span>156 / 182</span>
+                <span class="wart__meter wart__meter--ucs"><b>UCS-2</b><span class="wart__bar"><i style="width:57.1%"></i></span>40 / 70</span>
+              </>
+            )}
+            {b.art === 'fedi' && (
+              <span class="wart__screen">{screens[1].body}</span>
+            )}
+          </div>
+          <div class="wcard__content">
+            <h3 class="wcard__title">{b.title}</h3>
+            <p class="wcard__desc">{b.desc}</p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+</section>

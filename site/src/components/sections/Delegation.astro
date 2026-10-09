@@ -1,0 +1,132 @@
+---
+import Handset from '../Handset.astro';
+import { screens } from '../../data/site';
+
+/* The template's tab + image section. Its app mockups are replaced by real
+   screens from a v0.1 session in cmd/ussdsim. */
+const features = [
+  {
+    step: 0,
+    label: 'Dial a shortcode',
+    desc: 'Dial the shortcode. The gateway routes it to its tenant, here the Fediverse reference adapter. This menu is exactly what the Africa\'s Talking sandbox received on 9 October 2026.',
+  },
+  {
+    step: 1,
+    label: 'Page through posts',
+    desc: 'Display names lose their emoji, so the list stays GSM-7 and more posts fit on one screen.',
+  },
+  {
+    step: 2,
+    label: 'Fit the screen',
+    desc: 'A Swahili post ends in an emoji. The text stays GSM-7 and gets the full 182; only the screen holding the emoji pays for UCS-2, where the budget is 70.',
+  },
+  {
+    step: 3,
+    label: 'Hand over to SMS (planned)',
+    desc: 'Not in v0.1. A USSD screen holds 182 characters at most; SMS is how a flow will hand over anything longer, such as a link or a full post.',
+  },
+];
+
+/* Screenshots from the Africa's Talking sandbox simulator. They are added
+   later as src/assets/sim-dial.png, sim-menu.png and sim-post.png; until
+   then the glob matches nothing and the strip is not rendered. */
+const simFiles = import.meta.glob<{ default: ImageMetadata }>('../../assets/sim-*.png', { eager: true });
+const simOrder = [
+  ['sim-dial', "Africa's Talking simulator: dialling the sandbox code"],
+  ['sim-menu', "Africa's Talking simulator: the OpenUSSD menu"],
+  ['sim-post', "Africa's Talking simulator: a post on the handset screen"],
+] as const;
+const sims = simOrder
+  .map(([name, alt]) => {
+    const hit = Object.entries(simFiles).find(([path]) => path.endsWith(`/${name}.png`));
+    return hit ? { img: hit[1].default, alt } : null;
+  })
+  .filter((s) => s !== null);
+---
+<section class="delegation" id="delegation" aria-labelledby="delegation-title">
+  <header class="delegation__header">
+    <div class="delegation__heading">
+      <p class="badge">A real session</p>
+      <h2 class="h2" id="delegation-title">Write it once.<br /><em>Run it on every network.</em></h2>
+    </div>
+    <p class="delegation__lede">
+      Your service answers one signed webhook. An adapter underneath speaks
+      each network's own format: Africa's Talking today, MTN and SMPP
+      planned. These screens are v0.1's real output.
+    </p>
+  </header>
+
+  <div class="delegation__inner">
+    <ol class="features" role="tablist" aria-label="A USSD session, step by step">
+      {features.map((f) => (
+        <li class="feature" style={`--i:${f.step}`}>
+          <button
+            class="feature__btn"
+            type="button"
+            role="tab"
+            id={`feature-${f.step}`}
+            data-step={f.step}
+            aria-selected={f.step === 0 ? 'true' : 'false'}
+            aria-controls={`mock-${f.step}`}
+            tabindex={f.step === 0 ? 0 : -1}
+          >
+            <img class="feature__chevron" src="/assets/arrows.svg" alt="" aria-hidden="true" />
+            <span class="feature__head">
+              <span class="feature__label">{f.label}</span>
+              <span class="feature__desc">{f.desc}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
+
+    <div class="stage">
+      {features.map((f) => (
+        <div
+          class={`mock${f.step === 0 ? ' is-active' : ''}${f.step === 2 ? ' mock--pair' : ''}`}
+          id={`mock-${f.step}`}
+          role="tabpanel"
+          aria-labelledby={`feature-${f.step}`}
+          data-step={f.step}
+          hidden={f.step !== 0}
+        >
+          {f.step < 2 && <Handset screen={screens[f.step]} />}
+          {f.step === 2 && (
+            <>
+              <Handset screen={screens[2]} class="handset--back" />
+              <Handset screen={screens[3]} class="handset--front" />
+            </>
+          )}
+          {f.step === 3 && (
+            <div class="planned">
+              <p class="planned__tag"><i aria-hidden="true"></i>Planned, not built</p>
+              <p class="planned__title">SMS hand-over</p>
+              <p class="planned__body">
+                v0.1 speaks USSD only. SMS send and receive, and a way for a
+                USSD flow to send something longer by SMS, are on the plan for
+                a later release.
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <p class="delegation__note">
+    From <code>cmd/ussdsim</code>, the terminal handset that ships with the
+    gateway. The posts are demo data served by a local test instance; every
+    screen and budget figure is the gateway's own output.
+  </p>
+
+  {sims.length > 0 && (
+    <figure class="sims">
+      <div class="sims__row">
+        {sims.map((s) => (
+          <img src={s.img.src} width={s.img.width} height={s.img.height} alt={s.alt} loading="lazy" decoding="async" />
+        ))}
+      </div>
+      <figcaption>Africa's Talking sandbox simulator, dialling *384*70421#</figcaption>
+    </figure>
+  )}
+</section>

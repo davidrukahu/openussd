@@ -1,0 +1,11 @@
+---
+/* Replaces the template's customer-logo strip. Plain text only: these are
+   the things v0.1 actually talks to or implements, not endorsements. */
+const items = ["Africa's Talking (sandbox tested)", 'Mastodon', 'GSM 03.38', 'ActivityPub'];
+---
+<section class="works" aria-labelledby="works-label">
+  <p class="works__label" id="works-label">Works with</p>
+  <ul class="works__list">
+    {items.map((t) => <li class="works__item">{t}</li>)}
+  </ul>
+</section>

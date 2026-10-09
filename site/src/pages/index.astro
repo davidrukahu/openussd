@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/sections/Hero.astro';
+import WorksWith from '../components/sections/WorksWith.astro';
+import Why from '../components/sections/Why.astro';
+import Delegation from '../components/sections/Delegation.astro';
+import Status from '../components/sections/Status.astro';
+import HowItWorks from '../components/sections/HowItWorks.astro';
+import TryIt from '../components/sections/TryIt.astro';
+import Faq from '../components/sections/Faq.astro';
+import Standards from '../components/sections/Standards.astro';
+import Related from '../components/sections/Related.astro';
+import { title, description } from '../data/site';
+---
+<Base title={title} description={description} path="/">
+  <Hero />
+  <WorksWith />
+  <Why />
+  <Delegation />
+  <Status />
+  <HowItWorks />
+  <TryIt />
+  <Faq />
+  <Standards />
+  <Related />
+</Base>

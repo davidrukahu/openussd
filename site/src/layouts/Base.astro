@@ -1,0 +1,39 @@
+---
+import Head from './Head.astro';
+import Nav from '../components/sections/Nav.astro';
+import Footer from '../components/sections/Footer.astro';
+import Cta from '../components/sections/Cta.astro';
+// Self-hosted typefaces (SIL OFL 1.1), bundled at build time.
+import '@fontsource-variable/dm-sans/opsz.css';
+import '@fontsource-variable/dm-sans/opsz-italic.css';
+import '@fontsource-variable/geist/wght.css';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description: string;
+  path: string;
+  /** Closing CTA panel. Every page except the 404 ends on it. */
+  cta?: boolean;
+  noindex?: boolean;
+}
+const { title, description, path, cta = true, noindex = false } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head><Head title={title} description={description} path={path} noindex={noindex} /></head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Nav />
+    <main id="main" class="page" data-page={path}>
+      <div class="container">
+        <slot />
+        {cta && <Cta />}
+      </div>
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/entry.js';
+    </script>
+  </body>
+</html>

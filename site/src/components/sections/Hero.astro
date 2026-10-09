@@ -1,0 +1,21 @@
+---
+import Button from '../Button.astro';
+---
+<section class="hero" id="hero" aria-labelledby="hero-title">
+  <div class="hero__panel" id="hero-media">
+    <img class="hero__img" src="/assets/hero.jpg" alt="" fetchpriority="high" />
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <h1 class="hero__headline" id="hero-title">
+        The open web, <em>on any phone</em>.
+      </h1>
+      <p class="hero__lede">
+        OpenUSSD is a self-hostable gateway and SDK that lets a web service
+        run a USSD menu, the *123# kind every phone has, without rebuilding
+        the integration for each telco.
+      </p>
+      <Button href="#try" label="Try it in two minutes" variant="primary" />
+      <p class="hero__status">v0.1, working, not production. AGPL-3.0-or-later.</p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,1452 @@
+
+/* ============================================================
+   Section styles kept from the Parley template (MIT, Alex Prokhorov),
+   trimmed to the sections this site uses. OpenUSSD's own additions
+   live in sections.css.
+   ============================================================ */
+
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+/* Vercel Web Interface Guidelines: no double-tap zoom on controls, tap
+   highlight follows the design. */
+a, button, summary, label, input, textarea, select, [role="button"], [role="tab"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Anchored sections clear the fixed nav. */
+section[id] {
+  scroll-margin-top: 96px;
+}
+
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--grey-900);
+  color: #fff;
+  font: 500 14px/1.2 var(--font-ui);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--brand-500, #f48d16);
+  outline-offset: 2px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--grey-900);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.page {
+  /* Framer starts every page's content 73px down, clearing the fixed nav. */
+  padding-top: 73px;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full-bleed helper: section escapes the 1200 container */
+.bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+/* ---------- shared type ---------- */
+
+.badge {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--m-size);
+  line-height: 1;
+  color: var(--brand-text);
+}
+
+.h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--h2-size);
+  line-height: var(--h2-line);
+  color: var(--grey-900);
+  letter-spacing: -0.01em;
+  font-variation-settings: "opsz" 14;
+  text-wrap: balance;
+}
+
+.h2 em {
+  font-style: italic;
+  color: var(--grey-600);
+  font-weight: 400;
+}
+
+/* Framer gives each section heading its own measure; these are the widths
+   read off the live site at desktop. */
+.why .h2 { max-width: 540px; }
+.delegation .h2 { max-width: 540px; }
+.hiw .h2 { max-width: 700px; }
+.faq .h2 { max-width: 600px; }
+.integrations .h2 { max-width: 700px; }
+.cta .cta__title { max-width: 660px; }
+
+.h2--center {
+  text-align: center;
+}
+
+/* ============ TOP NAV ============ */
+
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--background);
+  display: flex;
+  justify-content: center;
+  transform: translateY(0);
+  transition:
+    transform var(--d-spring) var(--e-tween-out),
+    background-color 200ms var(--e-tween-out),
+    backdrop-filter 200ms var(--e-tween-out);
+  will-change: transform;
+}
+
+.nav-bar.is-over-hero {
+  background: rgba(247, 247, 244, 0.55);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.nav-bar.is-hidden {
+  transform: translateY(-100%);
+}
+
+.nav {
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: 20px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 20px 0;
+}
+
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+  /* Framer's brand cell is 52px tall, which sets the whole 72px bar. */
+  height: 52px;
+}
+
+.nav__brand img {
+  display: block;
+  height: 18px;
+  width: auto;
+}
+
+.nav__right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav__links a {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--m-size);
+  line-height: var(--body-line);
+  color: var(--grey-900);
+  text-decoration: none;
+  transition: opacity 200ms var(--e-tween-out);
+}
+
+.nav__links a:hover {
+  opacity: 0.65;
+}
+
+.nav__sep {
+  width: 4px;
+  height: 4px;
+  background: var(--grey-900);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.nav__cta {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 200ms var(--e-tween-out);
+}
+
+.nav__cta:hover {
+  transform: translateY(-1px);
+}
+
+/* ============ HERO ============ */
+/* Framer: a fixed 1240x619 panel (24px radius) sitting 93px from the top of
+   the document; the image inside scales slowly as the section scrolls away. */
+
+.hero {
+  /* The panel is absolutely placed inside a section of fixed height, so it
+     can grow past the container on scroll without moving anything below.
+     Both heights are tokens so the phone breakpoint can restate them once. */
+  --hero-top: 20px;
+  --hero-rest-h: 619px;
+  position: relative;
+  width: 100%;
+  height: calc(var(--hero-top) + var(--hero-rest-h) + 20px);
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* Resting state matches Framer exactly: a 1240x619 panel, 24px radius, sitting
+   93px from the top of the document. hero.js drives these four values as the
+   section scrolls away, expanding the panel to full bleed. Without JS, or
+   under reduced motion, the resting state is what stays on screen. */
+.hero__panel {
+  --w: 100%;
+  --h: var(--hero-rest-h);
+  --x: 0px;
+  --y: 0px;
+  --radius: 24px;
+  position: absolute;
+  top: var(--hero-top);
+  left: 50%;
+  width: min(var(--w), 1240px);
+  height: var(--h);
+  translate: calc(-50% + var(--x)) var(--y);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #c8855d;
+  will-change: width, height, translate, border-radius;
+}
+
+.hero__panel.is-expanding {
+  width: var(--w);
+  max-width: none;
+}
+
+.hero__img {
+  --img-scale: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100.5%;
+  max-width: none;
+  height: 127.5%;
+  object-fit: fill;
+  transform: translate(-50%, -50%) scale(var(--img-scale));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+
+.hero__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  text-align: center;
+  color: var(--white);
+  z-index: 2;
+}
+
+.hero__headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--h1-size);
+  line-height: var(--h1-line);
+  letter-spacing: -0.015em;
+  color: var(--white);
+  text-wrap: balance;
+  max-width: 660px;
+  text-shadow: 0 2px 24px rgba(26, 23, 20, 0.18);
+}
+
+.hero__headline em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.hero__lede {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 420px;
+  text-shadow: 0 1px 12px rgba(26, 23, 20, 0.25);
+}
+
+
+
+/* ============ WHY PARLEY (expanding cards) ============ */
+
+.why {
+  width: 100%;
+  /* Bottom padding must clear the open card's box-shadow (12px offset +
+     16px blur ≈ 25-30px past its true edge) before the next section's
+     opaque background begins - otherwise it paints over and truncates
+     the shadow regardless of blur radius. The open card already eats
+     10px of this via its centered 20px overhang (440px vs the 420px
+     row), so padding needs to be overhang + clearance, not just
+     clearance. */
+  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.why__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+}
+
+.why__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 540px;
+}
+
+.why__lede {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  width: 420px;
+  text-wrap: balance;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(2px, -3px); }
+  50% { transform: translate(-1px, 2px); }
+  75% { transform: translate(-2px, -1px); }
+}
+
+/* ============ DELEGATION ============ */
+
+.delegation {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 80px 0;
+  background: var(--background);
+}
+
+/* The Framer component is a plain relative section: no pin, no scroll
+   region. Tabs are click-driven. */
+.delegation__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
+}
+
+.delegation__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 540px;
+}
+
+.delegation__lede {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  width: 420px;
+}
+
+.delegation__inner {
+  display: flex;
+  align-items: stretch;
+  gap: 40px;
+  width: 100%;
+}
+
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  width: 518px;
+  flex-shrink: 0;
+}
+
+.feature__btn {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 20px 0 20px 40px;
+  width: 100%;
+  display: block;
+  position: relative;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.feature__btn:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.feature__chevron {
+  position: absolute;
+  left: 0;
+  top: 28px;
+  width: 21px;
+  height: 16px;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px) scale(0.7);
+  transition: opacity 0s, transform 0s, visibility 0s 100ms;
+}
+
+.feature__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.feature__label {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--h4-size);
+  line-height: var(--h4-line);
+  color: var(--grey-600);
+  transition: color var(--d-spring) var(--e-tween-out);
+}
+
+.feature__desc {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--m-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  text-wrap: balance;
+  display: block;
+  box-sizing: content-box;
+  padding-top: 0;
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height var(--d-spring) var(--e-spring),
+    opacity 200ms var(--e-tween-out);
+}
+
+.feature__btn[aria-selected="true"] .feature__chevron {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0) scale(1);
+  transition:
+    opacity var(--d-spring) var(--e-tween-out) 80ms,
+    transform var(--d-spring) var(--e-spring) 80ms,
+    visibility 0s;
+}
+
+.feature__btn[aria-selected="true"] .feature__label {
+  color: var(--grey-900);
+}
+
+.feature__btn[aria-selected="true"] .feature__desc {
+  max-height: 200px;
+  padding-top: 8px;
+  opacity: 1;
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 564px;
+  background: var(--footer);
+  border-radius: 12px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mock {
+  position: absolute;
+  inset: 0;
+  padding: 48px 0 0 54px;
+  opacity: 0;
+  transform: translateY(12px) scale(0.99);
+  transition:
+    opacity var(--d-spring) var(--e-tween-out),
+    transform var(--d-spring) var(--e-spring);
+  pointer-events: none;
+}
+
+.mock[hidden] {
+  display: block;
+}
+
+.mock.is-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.mock__img {
+  display: block;
+  width: 860px;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  border-radius: 24px;
+  box-shadow: 0 28px 70px -23px rgba(26, 23, 20, 0.18);
+}
+
+
+/* ============ HOW IT WORKS ============ */
+
+.hiw {
+  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hiw__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+/* ============ FAQ ============ */
+
+.faq {
+  padding: 80px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 600px) minmax(0, 600px);
+  gap: 40px;
+  align-items: start;
+}
+
+.faq__left {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.faq__sub {
+  margin: 20px 0 6px;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  color: var(--grey-800);
+}
+
+/* Framer hangs the mosaic below the column without it adding height, so the
+   section is sized by the question list. */
+.faq__mosaic {
+  position: absolute;
+  left: 0;
+  top: 304px;
+  width: 531px;
+  max-width: 100%;
+  height: auto;
+}
+
+.faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faq__item {
+  background: var(--footer);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.faq__item summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--h5-size);
+  line-height: 120%;
+  color: var(--grey-900);
+  transition: background-color var(--d-button) var(--e-button);
+}
+
+.faq__item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq__item summary:hover {
+  background: var(--x-surface-hover);
+}
+
+.faq__plus {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--brand-500);
+  transition: transform var(--d-spring) var(--e-spring);
+}
+
+.faq__item[open] .faq__plus {
+  transform: rotate(45deg);
+}
+
+.faq__answer {
+  padding: 0 24px;
+  overflow: hidden;
+}
+
+.faq__answer p {
+  margin: 0;
+  padding: 2px 0 24px;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--m-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  max-width: 560px;
+}
+
+/* ============ INTEGRATIONS ============ */
+
+.integrations {
+  padding: 80px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.integrations__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.integrations__lede {
+  margin: 4px 0 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  max-width: 460px;
+  text-wrap: balance;
+}
+
+
+
+
+
+/* ============ CTA ============ */
+
+.cta {
+  padding: 80px 0;
+}
+
+/* ============ FOOTER ============ */
+
+.footer {
+  width: 100%;
+  background: #efeee8;
+}
+
+.footer__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 20px 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer__logo {
+  height: 22px;
+  width: auto;
+}
+
+.footer__mid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 20px 0 10px;
+}
+
+.footer__tagline {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--s-size);
+  line-height: var(--body-line);
+  color: var(--grey-800);
+  width: 239px;
+}
+
+.footer__cols {
+  display: flex;
+  gap: 40px;
+}
+
+.footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 133px;
+}
+
+.footer__col-title {
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--m-size);
+  color: var(--grey-900);
+}
+
+.footer__square {
+  width: 7px;
+  height: 7px;
+  background: var(--brand-500);
+  flex-shrink: 0;
+}
+
+.footer__col a {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--m-size);
+  color: var(--grey-800);
+  line-height: var(--body-line);
+  text-decoration: none;
+  padding-left: 16px;
+  transition: color 160ms var(--e-tween-out);
+}
+
+.footer__col a:hover {
+  color: var(--grey-900);
+}
+
+/* framer footer [logo] block: 235px clipped window; the wordmark is
+   pinned at bottom:-101px so its lower third sits below the page edge. */
+.footer__mark {
+  position: relative;
+  margin-top: 0;
+  height: 235px;
+  overflow: hidden;
+}
+
+.footer__watermark {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  width: 100%;
+  height: 347px;
+  object-fit: cover;
+  display: block;
+}
+
+.footer__mosaic {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 624px;
+  max-width: 80%;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.footer__bottom {
+  position: absolute;
+  left: 0;
+  bottom: 23px;
+  width: 100%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--m-size);
+  color: var(--grey-800);
+}
+
+.footer__bottom p {
+  margin: 0;
+}
+
+.footer__bottom a {
+  color: var(--grey-800);
+  text-decoration: none;
+  transition: color 160ms var(--e-tween-out);
+}
+
+.footer__bottom a:hover {
+  color: var(--grey-900);
+}
+
+/* ============ REDUCED MOTION ============ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============ TABLET / MOBILE ============ */
+
+@media (max-width: 1200px) {
+  .container {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 810px) {
+  /* Framer runs a 20px phone gutter everywhere except the home page. */
+  .container {
+    padding: 0 20px;
+  }
+  .page[data-page="/"] .container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 810px) {
+  .h2 {
+    font-size: var(--h2-size);
+  }
+
+  /* why cards: vertical stack, all expanded */
+  .why {
+    padding: 34px 0 0;
+  }
+  .why__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .why__heading,
+  .why__lede {
+    width: 100%;
+  }
+
+  .delegation { padding: 0 0 0; gap: 32px; }
+  .delegation__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .delegation__heading,
+  .delegation__lede {
+    width: 100%;
+  }
+  .delegation__inner {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .features {
+    width: 100%;
+  }
+  .stage {
+    height: 460px;
+  }
+
+
+  /* how-it-works: window scrolls naturally, no pan */
+  .hiw {
+    padding: 0;
+    gap: 36px;
+  }
+
+  .faq {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 0;
+  }
+  .faq__mosaic {
+    margin-top: 24px;
+    width: 320px;
+  }
+
+  .integrations {
+    padding: 80px 0;
+  }
+
+  .footer__inner {
+    padding: 40px 20px 24px;
+  }
+  .footer__mid {
+    flex-direction: column;
+    gap: 32px;
+  }
+  .footer__cols {
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .footer__mark {
+    height: 204px;
+  }
+  .footer__watermark {
+    height: 100px;
+    bottom: -33px;
+  }
+  .footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    bottom: 60px;
+    padding: 0 4px;
+  }
+}
+
+
+
+
+/* ================================================================
+   FRAMER COMPONENT PORTS - exact specs from project M9cZnnZEzzWUCV6nAPp1
+   ================================================================ */
+
+/* ---------- Buttons/button (Y7iLraJCB) ---------- */
+
+.fbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 8px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: background-color 200ms var(--e-tween-out);
+}
+
+.fbtn--primary { background: var(--grey-900); }
+.fbtn--secondary { background: var(--white); }
+/* Tertiary: the label rolls but the chevron stays put. */
+.fbtn--tertiary { background: transparent; }
+.fbtn--tertiary .fbtn__label { color: var(--grey-900); }
+.fbtn--tertiary:hover .fbtn__arrows svg { transform: translateX(-23px); }
+.fbtn--full { width: 100%; }
+
+.fbtn__chip {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: var(--brand-500);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* 25px window, two 24px chevrons; default shows the right one,
+   hover slides to the left one (framer end→start distribution swap) */
+.fbtn__arrows {
+  display: inline-flex;
+  align-items: center;
+  width: 25px;
+  height: 24px;
+  overflow: hidden;
+}
+
+.fbtn__arrows svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--grey-900);
+  transform: translateX(-23px);
+  transition: transform var(--d-button) var(--e-button);
+}
+
+.fbtn:hover .fbtn__arrows svg {
+  transform: translateX(0);
+}
+
+/* label roller: 18px window, two stacked copies */
+.fbtn__label {
+  display: inline-flex;
+  flex-direction: column;
+  height: 18px;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: var(--m-size);
+  line-height: var(--body-line);
+}
+
+.fbtn__label span {
+  display: block;
+  height: 18px;
+  line-height: 18px;
+  opacity: 0.9;
+  transform: translateY(0);
+  transition: transform var(--d-button) var(--e-button);
+}
+
+.fbtn:hover .fbtn__label span {
+  transform: translateY(-18px);
+}
+
+.fbtn--primary .fbtn__label { color: var(--white); }
+.fbtn--secondary .fbtn__label { color: var(--grey-900); }
+
+/* ---------- Cards/Benefit cards (OA43R7kz7 + L54dG_oz5) ---------- */
+
+.why-cards {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 420px;
+}
+
+.wcard {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 420px;
+  background: var(--footer);
+  border-radius: 12px;
+  cursor: pointer;
+  outline: none;
+  /* Framer's literal curve (0.34,1.2,0.64,1) overshoots, and because all
+     four cards share one flex row, that overshoot forces neighboring
+     cards to reflow/settle a second time - reads as a shake. Decisive
+     ease-out, no bounce, per explicit feedback. */
+  transition:
+    flex-basis var(--d-spring) var(--e-tween-out),
+    flex-grow var(--d-spring) var(--e-tween-out),
+    height var(--d-spring) var(--e-tween-out),
+    background-color var(--d-spring) var(--e-tween-out),
+    border-radius var(--d-spring) var(--e-tween-out),
+    box-shadow var(--d-spring) var(--e-tween-out);
+}
+
+.wcard.is-active {
+  flex: 0 0 352px;
+  height: 440px;
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 12px 16px 0 var(--grey-100);
+  /* The shadow's 16px blur bleeds past the 12px gap into the next card.
+     Flex items stack in DOM order at the same level by default, so the
+     next sibling's opaque surface was painting over - masking - that
+     bleed and reading as a hard-clipped edge. Raise the open card above
+     its siblings so the shadow renders over them intact. */
+  z-index: 1;
+}
+
+.wcard:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--brand-500);
+}
+
+/* closed state: number / mosaic / title, space-between */
+.wcard__closed {
+  position: absolute;
+  inset: 0;
+  /* Clip content here (not on .wcard) so the card's own box-shadow - an
+     element clips its own shadow when overflow is set on that element -
+     isn't cut off at the bottom. */
+  border-radius: inherit;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 40px;
+  opacity: 1;
+  transition: opacity 200ms var(--e-tween-out) 120ms;
+}
+
+.wcard.is-active .wcard__closed {
+  opacity: 0;
+  transition-delay: 0ms;
+  pointer-events: none;
+}
+
+.wcard__number {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--h2-size);
+  line-height: var(--h2-line);
+  color: rgb(221, 216, 211);
+  font-variation-settings: "opsz" 14;
+}
+
+.wcard__mosaic {
+  width: 244px;
+  height: 184px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wcard__mosaic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: drift 9s ease-in-out infinite;
+}
+
+.wcard[data-index="02"] .wcard__mosaic img { animation-delay: -2s; }
+.wcard[data-index="03"] .wcard__mosaic img { animation-delay: -4s; }
+.wcard[data-index="04"] .wcard__mosaic img { animation-delay: -6s; }
+
+.wcard__title-closed {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--h5-size);
+  line-height: var(--h5-line);
+  color: var(--grey-900);
+  font-variation-settings: "opsz" 14;
+}
+
+/* opened state: image (radius 12) + content, padding 8 */
+.wcard__open {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--e-tween-out);
+}
+
+.wcard.is-active .wcard__open {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 120ms;
+}
+
+.wcard__img {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.wcard__img img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wcard__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wcard__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--h3-size);
+  line-height: var(--h3-line);
+  color: var(--grey-900);
+  font-variation-settings: "opsz" 14;
+  text-wrap: balance;
+}
+
+.wcard__desc {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--m-size);
+  line-height: var(--body-line);
+  color: var(--grey-900);
+  text-wrap: balance;
+}
+
+
+/* ---------- Sections/Tab+images (uHCAWDn2h) ---------- */
+
+.hiw__panel {
+  position: relative;
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: url("/assets/canyon.jpg") center / cover no-repeat;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.hiw__pills {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  z-index: 3;
+}
+
+.hiw__pill {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--grey-900);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background-color var(--d-spring) var(--e-tween-out);
+}
+
+.hiw__pill.is-active {
+  background: var(--white);
+}
+
+.hiw__stage {
+  position: relative;
+  width: 100%;
+  border-radius: 25px;
+  overflow: hidden;
+  background: var(--background);
+  aspect-ratio: 1.53;
+}
+
+/* ---------- Sections/Final CTA (IlMg0EFiD / RVGavsn11) ---------- */
+
+.cta {
+  padding: 80px 0;
+}
+
+.cta__panel {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+/* Framer sizes this image 1729x500 inside the 1240 panel and anchors it left,
+   so the panel crops the right-hand side of the painting. */
+.cta__bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 139.44%;
+  max-width: none;
+  height: 100%;
+  object-fit: fill;
+  z-index: -2;
+}
+
+.cta__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--grey-900);
+  opacity: 0.25;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.cta__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 0;
+  width: 700px;
+}
+
+.cta__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--h2-size);
+  line-height: var(--h2-line);
+  letter-spacing: 0;
+  color: var(--white);
+  font-variation-settings: "opsz" 14;
+  text-wrap: balance;
+}
+
+.cta__title em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.cta__lede {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--l-size);
+  line-height: var(--body-line);
+  color: var(--white);
+  max-width: 500px;
+  text-wrap: balance;
+}
+
+/* ---------- Navigation/Footer (pAQMlpg20) ---------- */
+
+.footer {
+  width: 100%;
+  background: var(--footer);
+}
+
+.footer__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--grey-600);
+}
+
+/* ---------- responsive overrides for ported components ---------- */
+
+@media (max-width: 810px) {
+  .why-cards {
+    flex-direction: column;
+    height: auto;
+    align-items: stretch;
+  }
+  .wcard,
+  .wcard.is-active {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    background: var(--white);
+    border-radius: 12px;
+  }
+  .wcard__closed { display: none; }
+  .wcard__open {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cta__panel { height: 500px; }
+  /* Framer keeps the CTA headline at the H2 size on phone. */
+  .cta__title { font-size: var(--h2-size); }
+  /* Framer keeps the three pills on one clipped row at phone. */
+  .hiw__pills { flex-wrap: nowrap; justify-content: flex-start; overflow: clip; width: 100%; }
+  .hiw__pill { flex-shrink: 0; white-space: nowrap; }
+  .fbtn--full { width: 100%; }
+}

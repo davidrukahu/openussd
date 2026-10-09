@@ -1,0 +1,27 @@
+---
+import Button from '../Button.astro';
+import { faqs, repo } from '../../data/site';
+---
+<section class="faq" id="faq" aria-labelledby="faq-title">
+  <div class="faq__left">
+    <p class="badge">FAQ</p>
+    <h2 class="h2" id="faq-title">Questions<br />answered.</h2>
+    <p class="faq__sub">Something not covered here?</p>
+    <Button href={`${repo}/issues`} label="Open an issue" variant="primary" />
+    <img class="faq__mosaic" src="/assets/faq-mosaic.png" alt="" loading="lazy" />
+  </div>
+
+  <div class="faq__list">
+    {faqs.map((item) => (
+      <details class="faq__item">
+        <summary>
+          <h3 class="faq__q">{item.q}</h3>
+          <svg class="faq__plus" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.1 1.7"/></svg>
+        </summary>
+        <div class="faq__answer">
+          <p set:html={item.a} />
+        </div>
+      </details>
+    ))}
+  </div>
+</section>

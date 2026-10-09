@@ -1,0 +1,129 @@
+/* ============================================================
+   Design tokens - read directly from the Parley Framer project
+   (M9cZnnZEzzWUCV6nAPp1). Names, values and breakpoints match the
+   project's own color styles, text styles and transitions exactly.
+   Do not substitute near-miss values.
+   ============================================================ */
+
+:root {
+  /* ---- Color styles (12, verbatim from the project) -------------- */
+  --grey-900: rgb(37, 31, 25);
+  --grey-800: rgb(104, 97, 90);
+  --grey-600: rgb(148, 139, 129);
+  --grey-400: rgb(212, 205, 199);
+  --grey-200: rgb(228, 224, 221);
+  --grey-100: rgb(235, 232, 228);
+  --grey-50: rgba(235, 232, 228, 0.6);
+  --brand-500: rgb(244, 141, 22);
+  --background: rgb(247, 247, 244);
+  --footer: rgb(238, 237, 230);
+  --white: rgb(255, 255, 255);
+  --error: rgb(251, 56, 88);
+
+  /* ---- Typefaces ------------------------------------------------- */
+  --font-display: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  --font-ui: "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* ---- Text styles ----------------------------------------------
+     Desktop values. The two media blocks below carry the project's
+     Tablet (<=1200) and Phone (<=810) overrides. Weight, line-height
+     and default color are fixed per style, so they live here. */
+  --h1-size: 68px;   --h1-weight: 600; --h1-line: 105%;
+  --h2-size: 52px;   --h2-weight: 500; --h2-line: 105%;
+  --h3-size: 32px;   --h3-weight: 500; --h3-line: 110%;
+  --h4-size: 24px;   --h4-weight: 500; --h4-line: 110%;
+  --h5-size: 20px;   --h5-weight: 500; --h5-line: 110%;
+  --card-title-size: 20px;                     /* Card title (h3) */
+  --number-size: 52px;                         /* Number (p) */
+
+  --badge-size: 14px;  --badge-weight: 600; --badge-line: 100%;
+  --xl-size: 18px;     --body-weight: 400;  --body-line: 120%;
+  --l-size: 16px;
+  --m-size: 14px;
+  --s-size: 12px;
+  --button-size: 14px; --button-weight: 500; --button-line: 1.2em;
+
+  /* ---- Motion ----------------------------------------------------
+     Framer springs, integrated and expressed as CSS linear() so the
+     curve is the real spring rather than a bezier approximation.
+     Each pairs with its own settling duration. */
+
+  /* spring-duration 0.4s bounce 0.2 - the project's default (69 uses) */
+  --d-spring: 540ms;
+  --e-spring: linear(0, 0.0142, 0.0517, 0.1056, 0.1705, 0.242, 0.3164, 0.391, 0.4638, 0.5332, 0.5982, 0.6581, 0.7125, 0.7613, 0.8045, 0.8424, 0.8753, 0.9034, 0.9273, 0.9472, 0.9637, 0.977, 0.9878, 0.9962, 1.0026, 1.0074, 1.0108, 1.0131, 1.0144, 1.0151, 1.0151, 1.0148, 1.0141, 1.0132, 1.0122, 1.0111, 1.0099, 1.0088, 1.0077, 1.0067, 1.0057, 1.0049, 1.0041, 1.0034, 1.0027, 1.0022, 1.0017, 1.0013, 1);
+
+  /* spring-duration 0.6s bounce 0.2 - same curve, slower */
+  --d-spring-slow: 810ms;
+  --e-spring-slow: var(--e-spring);
+
+  /* spring-physics 500 60 1 - the button (overdamped, no overshoot) */
+  --d-button: 714ms;
+  --e-button: linear(0, 0.0416, 0.1281, 0.2268, 0.3233, 0.4119, 0.4908, 0.5601, 0.6204, 0.6726, 0.7177, 0.7567, 0.7903, 0.8193, 0.8442, 0.8658, 0.8843, 0.9003, 0.9141, 0.926, 0.9362, 0.945, 0.9526, 0.9592, 0.9648, 0.9697, 0.9739, 0.9775, 0.9806, 0.9833, 0.9856, 0.9876, 0.9893, 0.9908, 0.992, 0.9931, 0.9941, 0.9949, 0.9956, 0.9962, 0.9967, 0.9972, 0.9976, 0.9979, 0.9982, 0.9985, 0.9987, 0.9989, 1);
+
+  /* spring-physics 400 40 1 - critically damped */
+  --d-spring-400: 462ms;
+  --e-spring-400: linear(0, 0.0163, 0.0576, 0.1145, 0.1805, 0.2504, 0.3211, 0.3899, 0.4555, 0.5168, 0.5733, 0.6249, 0.6714, 0.7132, 0.7504, 0.7834, 0.8125, 0.838, 0.8604, 0.8799, 0.8968, 0.9115, 0.9242, 0.9352, 0.9446, 0.9528, 0.9597, 0.9657, 0.9708, 0.9752, 0.979, 0.9822, 0.9849, 0.9872, 0.9892, 0.9908, 0.9922, 0.9934, 0.9945, 0.9953, 0.9961, 0.9967, 0.9972, 0.9976, 0.998, 0.9983, 0.9986, 0.9988, 1);
+
+  /* spring-physics 600 40 1 - the mobile menu expand */
+  --d-menu: 352ms;
+  --e-menu: linear(0, 0.0146, 0.053, 0.1081, 0.174, 0.2462, 0.3211, 0.3958, 0.4684, 0.5374, 0.6018, 0.6609, 0.7144, 0.7623, 0.8046, 0.8416, 0.8737, 0.9011, 0.9243, 0.9437, 0.9597, 0.9728, 0.9834, 0.9917, 0.9981, 1.0029, 1.0065, 1.0089, 1.0105, 1.0114, 1.0117, 1.0117, 1.0113, 1.0107, 1.01, 1.0091, 1.0082, 1.0074, 1.0065, 1.0057, 1.0049, 1.0042, 1.0035, 1.003, 1.0024, 1.002, 1.0016, 1.0013, 1);
+
+  /* Tween curves, verbatim from the project's transition strings */
+  --e-tween-inout: cubic-bezier(0.44, 0, 0.56, 1);      /* 0.2s  */
+  --e-tween-sharp: cubic-bezier(0.77, 0, 0.17, 1);      /* 0.16s */
+  --e-tween-back: cubic-bezier(0.34, 1.2, 0.64, 1);     /* 0.4s  */
+  --e-tween-out: cubic-bezier(0.2, 0.8, 0.2, 1);        /* 0.2/0.3/0.4s */
+  --e-tween-expo: cubic-bezier(0.23, 1, 0.32, 1);       /* 0.14s */
+
+  /* ---- Layout ---------------------------------------------------- */
+  --container: 1200px;
+  --gutter: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}
+
+/* Tablet - the project's second breakpoint */
+@media (max-width: 1200px) {
+  :root {
+    --h1-size: 54px;
+    --h2-size: 42px;
+    --h3-size: 26px;
+    --h4-size: 20px;
+    --h5-size: 18px;
+    --card-title-size: 18px;
+    --number-size: 42px;
+  }
+}
+
+/* Phone - the project's third breakpoint */
+@media (max-width: 810px) {
+  :root {
+    --h1-size: 44px;
+    --h2-size: 32px;
+    --h3-size: 24px;
+    --h4-size: 20px;
+    --h5-size: 18px;
+    --card-title-size: 18px;
+    --number-size: 32px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Derived values with no counterpart in the Framer project's own
+   color styles. Kept separate so the 12 canonical tokens above stay
+   an exact mirror of the source. Audit these against the design
+   before treating any of them as intentional.
+   ------------------------------------------------------------------ */
+:root {
+  --x-card-line: #ddd8d3;
+  --x-card-body: #3d342c;
+  --x-grey-500: #8e867d;
+  --x-surface-hover: #e8e6dd;
+  --x-hairline: rgba(26, 23, 20, 0.08);
+  /* The brand orange is 2.3:1 on the page background, too faint for text.
+     Text that wants the brand colour uses this darker step (5:1). */
+  --brand-text: #a85400;
+}

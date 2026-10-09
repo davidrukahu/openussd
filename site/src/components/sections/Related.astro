@@ -1,0 +1,25 @@
+---
+import { related } from '../../data/site';
+---
+<section class="related" id="related" aria-labelledby="related-title">
+  <header class="related__header">
+    <div class="related__heading">
+      <p class="badge">Related projects</p>
+      <h2 class="h2" id="related-title">Others have worked on parts of this.</h2>
+    </div>
+    <p class="related__lede">
+      How OpenUSSD differs: it is a gateway with a telco-adapter interface,
+      not a single-aggregator SDK. It speaks one signed webhook protocol that
+      any language can implement, and ships with a terminal simulator so it
+      can be tried without a telco.
+    </p>
+  </header>
+  <ul class="related__list">
+    {related.map(([name, href, text]) => (
+      <li class="related__row">
+        <a class="related__name" href={href}>{name}</a>
+        <p class="related__text">{text}</p>
+      </li>
+    ))}
+  </ul>
+</section>
