@@ -1,0 +1,34 @@
+name: Mirror to Codeberg
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeberg-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    if: github.repository == 'davidrukahu/openussd'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Codeberg holds the same history, so a plain push fast-forwards it.
+      # The token needs write access to the repository and nothing else.
+      - name: Push main and release tags
+        env:
+          CODEBERG_TOKEN: ${{ secrets.CODEBERG_TOKEN }}
+        run: |
+          remote="https://davidrukahu:${CODEBERG_TOKEN}@codeberg.org/davidrukahu/openussd.git"
+          git push "$remote" refs/remotes/origin/main:refs/heads/main
+          git push "$remote" --tags
