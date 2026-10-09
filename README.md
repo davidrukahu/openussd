@@ -80,22 +80,23 @@ read-only Fediverse adapter run end to end. What that means precisely:
 | Go SDK: typed screens, state, i18n, encoding-aware screen budget | Fediverse write paths, identity binding ([#9](https://github.com/davidrukahu/openussd/issues/9)) |
 | Mastodon public timeline over USSD, paginated | Independent security audit |
 
-Interfaces will break before v1.0. Follow the
-[milestones](https://github.com/davidrukahu/openussd/milestones) for what
+Interfaces will break before v1.0. See [`ROADMAP.md`](ROADMAP.md) for what
 lands next.
 
 ## Roadmap
 
-Indicative 12-month plan from project kickoff:
+[`ROADMAP.md`](ROADMAP.md) has the full plan: what a grant would pay for,
+task by task, with hours, costs and how each task can be checked. In short:
 
-| Milestone | Target | Scope |
-|---|---|---|
-| M1 - Gateway core | Month 1-2 | USSD protocol handling, session state, Africa's Talking adapter (see [note](docs/telco-access.md) on Safaricom) |
-| M2 - Go SDK + Fediverse prototype | Month 3-4 | State-machine primitives, Mastodon read-only adapter |
-| M3 - TypeScript SDK + second telco | Month 5-6 | TS SDK, SMS channel, MTN sandbox adapter, developer documentation v1 |
-| M4 - Full Fediverse adapter | Month 7-8 | Mastodon read/write, PeerTube, PixelFed; security hardening |
-| M5 - Audit + pilots | Month 9-10 | Independent security audit, community pilot deployments, doc translations |
-| M6 - v1.0 | Month 11-12 | Release, conference talks, governance handover |
+| Work package | Hours |
+|---|---|
+| 1. A gateway you can run in production | 230 |
+| 2. More networks: SMPP, MTN, a second aggregator | 290 |
+| 3. SMS | 130 |
+| 4. TypeScript SDK and developer guides | 220 |
+| 5. The Fediverse on any phone: posting and account linking | 160 |
+| 6. Security audit, v1.0 release and two pilots in Kenya | 220 |
+| **Total** | **1,250 hours, €50,000** |
 
 ## Repository layout
 
@@ -163,7 +164,7 @@ research and documentation, and any such use is disclosed.
 
 ## Funding
 
-OpenUSSD is seeking grant funding from open-source and public-interest funders. The project is registered against [FLOSS/fund](https://floss.fund/) via [`funding.json`](funding.json) so a single manifest can serve multiple grant opportunities.
+OpenUSSD is seeking grant funding from open-source and public-interest funders. [`ROADMAP.md`](ROADMAP.md) sets out what funding would pay for, task by task. The project is registered against [FLOSS/fund](https://floss.fund/) via [`funding.json`](funding.json) so a single manifest can serve multiple grant opportunities.
 
 ## Maintainer
 

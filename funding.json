@@ -55,8 +55,8 @@
       {
         "guid": "core-development-year-1",
         "status": "active",
-        "name": "Year-1 core development",
-        "description": "12 months of focused work on the gateway, Go and TypeScript SDKs, the Fediverse reference adapter, further telco adapters (MTN, SMPP, and Safaricom direct once a commercial agreement allows), an independent security audit, developer documentation, translation into French and Swahili, and direct costs (MNO sandbox fees, test devices, CI, hosting). Delivers a v1.0 release a single developer can self-host in an afternoon.",
+        "name": "Core development to v1.0",
+        "description": "About seven months of development, 1,250 hours at EUR 40 an hour, in six work packages: a production-ready gateway; SMPP, MTN and a second aggregator adapter; SMS; a TypeScript SDK and developer guides; Fediverse posting and account linking; and a v1.0 release with the findings of an independent security audit fixed and two pilots in Kenya. Every euro pays for development time. The task-by-task plan is in ROADMAP.md.",
         "amount": 50000,
         "currency": "EUR",
         "frequency": "one-time",

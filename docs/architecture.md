@@ -71,7 +71,7 @@ A self-hostable Go service. Responsibilities:
 - **Session store.** Each USSD screen is an independent HTTP request; the gateway maintains continuity across screens. Sessions are addressed by `(mno, session_id)` and carry an opaque blob owned by the application. The default backing store is in-process memory, which is correct for a single replica and is what the demo runs on. Redis is the option for more than one replica, since two replicas would otherwise each hold half of every conversation. A durable Postgres audit store is designed for but not built. Session timeout default 180s of user inactivity.
 - **Tenant router.** Most African shortcodes are shared. The gateway routes `(shortcode, sub-prefix)` to a tenant configuration and forwards the canonical event to that tenant's webhook URL. Per-tenant secrets sign outbound webhooks so applications can verify the request origin.
 - **Outbound channels (planned).** SMS and USSD push for asynchronous notifications. Same telco-adapter abstraction as inbound.
-- **Observability.** Structured logs, per-tenant metrics, sampled session traces. The audit log is the source of truth for "what did the user actually see?".
+- **Observability.** Structured logs today; per-tenant metrics and sampled session traces are planned. The audit log, once the Postgres store exists, is the source of truth for "what did the user actually see?".
 
 License: AGPL-3.0-or-later.
 
@@ -110,8 +110,8 @@ License: AGPL-3.0-or-later.
 ### Security
 
 - **Webhook signing** between gateway and tenant applications using shared secrets, rotated per tenant.
-- **MNO claim trust boundary** explicitly documented. The gateway treats MNO-supplied MSISDNs as *claims* and surfaces them to applications as such; PIN/OTP overlays exist for any flow that needs higher assurance.
-- **Independent security audit** scheduled in M5 of the year-1 plan.
+- **MNO claim trust boundary** explicitly documented. The gateway treats MNO-supplied MSISDNs as *claims* and surfaces them to applications as such; PIN or OTP checks are planned for any flow that needs higher assurance.
+- **Independent security audit** planned before v1.0; see [`ROADMAP.md`](../ROADMAP.md).
 
 ### Multi-tenancy
 
