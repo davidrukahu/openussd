@@ -88,6 +88,26 @@ becomes an unattributed load generator against a third-party instance and
 gets the operator's egress IP blocked. A 10 to 30 second TTL cache keyed on
 the instance removes the class.
 
+### Decide a redirect policy for instance fetches
+
+**Priority:** P2
+
+`defaultInstanceClient` follows any redirect, including to plain `http://`
+and to private or link-local addresses. Now that the demo defaults to an
+instance the operator does not run, a hostile or compromised instance could
+point the adapter at internal services, and the first 200 printable bytes of
+their JSON `error` field would reach the operator log. Allowing only
+same-host or HTTPS redirects in `CheckRedirect` would close that.
+
+### Keep no-break spaces in logged instance errors
+
+**Priority:** P3
+
+`printable` drops every character `unicode.IsPrint` rejects, which includes
+U+00A0 and U+202F. French typography puts those before `:` and `?`, so an
+instance answering in French logs words run together. Dropping only format
+and control characters would keep them.
+
 ## Testing
 
 ### Test the Redis session store

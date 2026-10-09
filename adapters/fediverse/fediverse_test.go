@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -290,5 +293,174 @@ func TestPostTextIsCapped(t *testing.T) {
 	}
 	if len(blob) > 12<<10 {
 		t.Errorf("session state is %d bytes, too close to the 16KB reply cap", len(blob))
+	}
+}
+
+// TestTimelineNamesClosedInstances checks that an instance which refuses
+// signed-out reads is reported as such, that other refusals with the same
+// statuses (a firewall's 403, an unrelated 422) are not, that an instance's
+// own error text is stripped of characters that do not print and cut to a
+// loggable length without splitting a character, and that the error never
+// repeats credentials from the instance URL.
+func TestTimelineNamesClosedInstances(t *testing.T) {
+	const closed = `{"error":"This method requires an authenticated user"}`
+	tests := []struct {
+		name   string
+		status int
+		body   string
+		want   string
+		reject string
+	}{
+		{"closed instance", http.StatusUnprocessableEntity, closed, "requires sign-in", " replied "},
+		{"closed instance answering 401", http.StatusUnauthorized, closed, "requires sign-in", " replied "},
+		{"firewall block", http.StatusForbidden, "<html>Access denied</html>", "127.0.0.1", "requires sign-in"},
+		{"other validation error", http.StatusUnprocessableEntity, `{"error":"Validation failed"}`, "Validation failed", "requires sign-in"},
+		{"outage", http.StatusServiceUnavailable, "", "replied 503", "requires sign-in"},
+		{"bidi override dropped", http.StatusUnprocessableEntity, "{\"error\":\"a\u202eb\"}", "Entity: ab", "\u202e"},
+		// The leading "a" puts the 200-byte cut inside a two-byte character.
+		{"long reason", http.StatusUnprocessableEntity, `{"error":"a` + strings.Repeat("é", 150) + `END"}`, "Entity: a" + strings.Repeat("é", 99), "END"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			t.Cleanup(srv.Close)
+
+			instance := strings.Replace(srv.URL, "http://", "http://operator:hunter2@", 1)
+			client := &Mastodon{Instance: instance, Client: srv.Client()}
+			_, err := client.PublicTimeline(context.Background(), 5)
+			if err == nil || !strings.Contains(err.Error(), tc.want) || strings.Contains(err.Error(), tc.reject) {
+				t.Fatalf("PublicTimeline error = %v, want %q and not %q", err, tc.want, tc.reject)
+			}
+			if strings.Contains(err.Error(), "hunter2") {
+				t.Fatalf("PublicTimeline error leaks the URL password: %v", err)
+			}
+			if !utf8.ValidString(err.Error()) {
+				t.Fatalf("PublicTimeline error is not valid UTF-8: %q", err)
+			}
+		})
+	}
+}
+
+// TestEnvOrTreatsEmptyAsUnset checks that an environment variable which is
+// set but empty falls back to the default, as an unset one does. The compose
+// file passes FEDIVERSE_INSTANCE through empty when the operator has not set
+// it, and the adapter must then use its own default instance.
+func TestEnvOrTreatsEmptyAsUnset(t *testing.T) {
+	const key = "OPENUSSD_TEST_ENVOR"
+	tests := []struct {
+		name  string
+		unset bool
+		value string
+		want  string
+	}{
+		{"unset", true, "", "fallback"},
+		{"empty", false, "", "fallback"},
+		{"set", false, "https://example.social", "https://example.social"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setenv restores the variable after the subtest, including
+			// when the unset case clears it.
+			t.Setenv(key, tc.value)
+			if tc.unset {
+				if err := os.Unsetenv(key); err != nil {
+					t.Fatalf("unsetting %s: %v", key, err)
+				}
+			}
+			if got := envOr(key, "fallback"); got != tc.want {
+				t.Errorf("envOr(%q) = %q, want %q", key, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestTimelineErrorIgnoresRemoteStatusText checks that the status in the
+// error is rebuilt from the code, so a server cannot put its own reason
+// phrase (bidi overrides, an oversized line) into the operator's log.
+func TestTimelineErrorIgnoresRemoteStatusText(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, buf, err := w.(http.Hijacker).Hijack()
+		if err != nil {
+			t.Errorf("hijack: %v", err)
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		_, _ = buf.WriteString("HTTP/1.1 422 Nope \u202e" + strings.Repeat("x", 5000) + "\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+		_ = buf.Flush()
+	}))
+	t.Cleanup(srv.Close)
+
+	client := &Mastodon{Instance: srv.URL, Client: srv.Client()}
+	_, err := client.PublicTimeline(context.Background(), 5)
+	if err == nil || !strings.Contains(err.Error(), "422 Unprocessable Entity") {
+		t.Fatalf("PublicTimeline error = %v, want the standard 422 text", err)
+	}
+	if strings.Contains(err.Error(), "\u202e") || strings.Contains(err.Error(), "xxxx") {
+		t.Fatalf("PublicTimeline error carries the remote reason phrase: %q", err)
+	}
+}
+
+// TestTimelineErrorNamesRedirectTarget checks that after a redirect the
+// error names the host that refused, not the one that was configured.
+func TestTimelineErrorNamesRedirectTarget(t *testing.T) {
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	t.Cleanup(target.Close)
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL+r.URL.RequestURI(), http.StatusMovedPermanently)
+	}))
+	t.Cleanup(origin.Close)
+
+	client := &Mastodon{Instance: origin.URL, Client: origin.Client()}
+	_, err := client.PublicTimeline(context.Background(), 5)
+	targetHost := strings.TrimPrefix(target.URL, "http://")
+	if err == nil || !strings.Contains(err.Error(), targetHost+" replied 403") {
+		t.Fatalf("PublicTimeline error = %v, want it to name %s", err, targetHost)
+	}
+}
+
+// stubTransport answers every request with a fixed response, the way a
+// recording or caching RoundTripper might, including one that leaves
+// Response.Request unset.
+type stubTransport struct{ resp *http.Response }
+
+func (s stubTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return s.resp, nil
+}
+
+// TestTimelineErrorWithUnusualResponses checks the error line against
+// responses a real transport rarely produces: no Request on the response, a
+// host carrying a bidi override, and a status code with no standard text.
+func TestTimelineErrorWithUnusualResponses(t *testing.T) {
+	bidiHost := &http.Request{URL: &url.URL{Scheme: "https", Host: "\u202eevil.example"}}
+	tests := []struct {
+		name   string
+		resp   *http.Response
+		want   string
+		reject string
+	}{
+		{"no request on response", &http.Response{StatusCode: http.StatusServiceUnavailable}, "configured.example replied 503 Service Unavailable", "\u202e"},
+		{"bidi in redirect host", &http.Response{StatusCode: http.StatusForbidden, Request: bidiHost}, "evil.example replied 403", "\u202e"},
+		{"non-standard status", &http.Response{StatusCode: 520}, "replied 520", "520 "},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.resp.Body = io.NopCloser(strings.NewReader(""))
+			client := &Mastodon{
+				Instance: "https://configured.example",
+				Client:   &http.Client{Transport: stubTransport{resp: tc.resp}},
+			}
+			_, err := client.PublicTimeline(context.Background(), 5)
+			if err == nil || !strings.Contains(err.Error(), tc.want) || strings.Contains(err.Error(), tc.reject) {
+				t.Fatalf("PublicTimeline error = %q, want %q and not %q", err, tc.want, tc.reject)
+			}
+		})
 	}
 }

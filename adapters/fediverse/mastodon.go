@@ -66,7 +66,7 @@ var defaultInstanceClient = &http.Client{
 // that a feature phone cannot complete anyway. Binding a USSD user to a
 // real account is the open question in issue #9.
 type Mastodon struct {
-	// Instance is the base URL, e.g. https://mastodon.social.
+	// Instance is the base URL, e.g. https://fosstodon.org.
 	Instance string
 	Client   *http.Client
 }
@@ -119,7 +119,31 @@ func (m *Mastodon) PublicTimeline(ctx context.Context, limit int) ([]Post, error
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fediverse: instance replied %s", resp.Status)
+		// An instance whose admin has turned off signed-out timeline reads
+		// answers 422 with this message. A firewall or an IP block can
+		// answer 403 or 422 too, and from a handset all of them look like
+		// an outage, so tell the operator which one it is in the instance's
+		// own words. Everything here comes from the remote server, so the
+		// status is rebuilt from its code rather than its reason phrase, and
+		// the host is the one that answered after any redirect, without the
+		// credentials the configured URL may carry.
+		host := endpoint.Host
+		if resp.Request != nil && resp.Request.URL != nil {
+			host = resp.Request.URL.Host
+		}
+		host = printable(host)
+		status := fmt.Sprint(resp.StatusCode)
+		if text := http.StatusText(resp.StatusCode); text != "" {
+			status += " " + text
+		}
+		reason := apiError(resp.Body)
+		if strings.Contains(reason, "requires an authenticated user") {
+			return nil, fmt.Errorf("fediverse: %s requires sign-in to read its public timeline (%s); set -instance or FEDIVERSE_INSTANCE to an instance that allows signed-out reads", host, status)
+		}
+		if reason != "" {
+			return nil, fmt.Errorf("fediverse: %s replied %s: %s", host, status, reason)
+		}
+		return nil, fmt.Errorf("fediverse: %s replied %s", host, status)
 	}
 
 	var statuses []apiStatus
@@ -225,4 +249,32 @@ func humaniseTime(iso string) string {
 	default:
 		return fmt.Sprintf("%dd", int(d.Hours()/24))
 	}
+}
+
+// apiError returns the "error" field of a Mastodon error body, cut to a
+// length that is safe to log, or "" when the body is not one.
+func apiError(body io.Reader) string {
+	var e struct {
+		Error string `json:"error"`
+	}
+	if json.NewDecoder(io.LimitReader(body, 4<<10)).Decode(&e) != nil {
+		return ""
+	}
+	reason := printable(e.Error)
+	const maxLen = 200
+	if len(reason) > maxLen {
+		return strings.ToValidUTF8(reason[:maxLen], "")
+	}
+	return reason
+}
+
+// printable drops the characters of remote text that do not print, bidi
+// overrides among them, so they cannot rearrange an operator's log line.
+func printable(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return -1
+	}, s)
 }
