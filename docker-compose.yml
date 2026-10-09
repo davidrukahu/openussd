@@ -30,8 +30,10 @@ services:
     environment:
       FEDIVERSE_WEBHOOK_SECRET: ${FEDIVERSE_WEBHOOK_SECRET:?}
       FEDIVERSE_LISTEN: ":8081"
-      # Any Mastodon instance with a public timeline works.
-      FEDIVERSE_INSTANCE: ${FEDIVERSE_INSTANCE:-https://mstdn.social}
+      # Any Mastodon instance that lets signed-out readers see its local
+      # public timeline works; many larger instances no longer do. Left
+      # empty, the adapter uses its own default.
+      FEDIVERSE_INSTANCE: ${FEDIVERSE_INSTANCE:-}
     expose:
       - "8081"
 

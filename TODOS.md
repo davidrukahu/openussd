@@ -6,17 +6,21 @@ this file is for decisions taken during implementation.
 
 ## Telco adapters
 
-### Capture Africa's Talking fixtures against the live sandbox
+### Handle Africa's Talking session-end events
 
-**Priority:** P1
+**Priority:** P2
 
-The fixtures in `gateway/testdata/fixtures/africastalking/` are hand-written
-from the provider's published request shape, so they prove the adapter is
-self-consistent rather than that it matches the network. Register for the
-sandbox, point a USSD channel at a tunnelled gateway, dial from the browser
-simulator, and copy the bodies the gateway logs in `Event.Raw`. This is what
-[#7](https://github.com/davidrukahu/openussd/issues/7) should become, now
-that Daraja is known to be the wrong target.
+The sandbox captures show a separate Events callback carrying
+a `status` when a session ends (`Success` and `Incomplete` observed so
+far; other values may exist). It is the only signal that
+a session ended without the application finishing it, so it should become a
+canonical `Cancel` (or `Timeout`, once a timeout has been captured and shown
+to differ) and let the gateway drop the session instead of waiting for the
+idle timeout. The
+payload is recorded in `docs/telco-access.md`.
+The Events callback is as unsigned as the dialogue one, so it must sit
+behind the same `TrustedProxy` allowlist; otherwise a forged `status` could
+end another subscriber's session.
 
 ### Second real network
 
@@ -88,6 +92,66 @@ becomes an unattributed load generator against a third-party instance and
 gets the operator's egress IP blocked. A 10 to 30 second TTL cache keyed on
 the instance removes the class.
 
+### Decide a redirect policy for instance fetches
+
+**Priority:** P2
+
+`defaultInstanceClient` follows any redirect, including to plain `http://`
+and to private or link-local addresses. Now that the demo defaults to an
+instance the operator does not run, a hostile or compromised instance could
+point the adapter at internal services, and the first 200 printable bytes of
+their JSON `error` field would reach the operator log. Allowing only
+same-host or HTTPS redirects in `CheckRedirect` would close that.
+
+### Cap the host in instance errors
+
+**Priority:** P2
+
+`PublicTimeline` cuts the remote error text to 200 bytes but not the host
+it names. Behind an HTTP proxy, a hostile instance can redirect to a very
+long host name that only the proxy resolves, and every handset request then
+logs it. The host wants the same cut as the error text, and an empty host
+(possible only with a custom transport) should fall back to the configured
+one.
+
+### Check the instance at startup
+
+**Priority:** P2
+
+A closed or misconfigured instance shows up only when a subscriber dials:
+`/healthz` always answers ok, and an instance given without a scheme
+(`fosstodon.org`) starts cleanly and then fails every dialogue. Refusing to
+start without an http or https URL, and logging one probe of the timeline
+with the sign-in hint, would surface both at deploy time.
+
+### Make instance errors easier to act on
+
+**Priority:** P3
+
+Return a typed error for "requires sign-in" so the menu handler can log it
+once, or at a lower level, instead of as an error on every keypress. Name
+both the configured and the answering host when a redirect happened. Treat
+right-to-left letters and invisible fillers in remote text as `printable`
+already treats bidi controls. Pin the 200-byte cap exactly in the test.
+
+### Keep no-break spaces in logged instance errors
+
+**Priority:** P3
+
+`printable` drops every character `unicode.IsPrint` rejects, which includes
+U+00A0 and U+202F. French typography puts those before `:` and `?`, so an
+instance answering in French logs words run together. Dropping only format
+and control characters would keep them.
+
+### Confirm the UCS-2 screen limit for USSD
+
+**Priority:** P3
+
+The screen budget uses 70 UCS-2 units (`canonical.MaxUCS2Units`), which is
+the SMS figure (140 octets). USSD carries 160 octets, which would hold 80
+UCS-2 characters. Confirm what Africa's Talking and a real network accept
+before raising it; 70 is safe meanwhile, only stricter than needed.
+
 ## Testing
 
 ### Test the Redis session store
@@ -111,6 +175,12 @@ real pipeline wants a cross-platform matrix and signed artifacts, which is
 M6 work.
 
 ## Completed
+
+### Africa's Talking fixtures captured from the sandbox
+
+**Completed:** v0.1.2 (2026-10-09). Three fixtures captured from the sandbox simulator
+alongside the hand-written ones; see the provenance table in
+`gateway/testdata/fixtures/africastalking/PROVENANCE.md`.
 
 ### Gateway core, Go SDK, and Fediverse reference adapter
 

@@ -5,6 +5,54 @@ All notable changes to OpenUSSD are recorded here. The format follows
 follows [semantic versioning](https://semver.org/). Interfaces will break
 before 1.0.
 
+## [0.1.2] - 2026-10-09
+
+### Fixed
+
+- **The example config no longer trusts the wrong network.** Its
+  Africa's Talking allowlist held `196.201.214.0/24`, a Safaricom mobile
+  data range, so a copied config would have accepted forged callbacks from
+  that network and rejected the real provider. It is now a placeholder
+  that matches nothing until you fill in your own addresses.
+
+### Added
+
+- Contract-test fixtures captured from the Africa's Talking sandbox,
+  alongside the hand-written ones (#7).
+- `docs/telco-access.md` explains the sandbox and production callback
+  addresses, how to test through a tunnel safely, and the session-end
+  events the sandbox sends.
+
+### Changed
+
+- README, architecture, RFC-0001 and `funding.json` describe what exists
+  today: USSD with SMS planned, Africa's Talking as the first adapter, a Go
+  SDK with TypeScript planned, cited GSMA figures, and a fair account of
+  related projects. The README says how the project uses AI tools and
+  links the Codeberg mirror; the project page is now openussd.org.
+
+## [0.1.1] - 2026-10-09
+
+### Fixed
+
+- **The quickstart works again.** The Fediverse demo defaulted to
+  mstdn.social, which now refuses signed-out reads of its public timeline,
+  so dialling the demo showed "Could not reach the instance". It now
+  defaults to fosstodon.org, and `docker-compose.yml` no longer carries a
+  second copy of the default.
+
+### Changed
+
+- **The operator log says why an instance refused.** "Requires sign-in"
+  appears only when Mastodon says an authenticated user is required, with a
+  pointer to `-instance` / `FEDIVERSE_INSTANCE`. Any other refusal, such as
+  a firewall's 403, is logged with the host, the status and the instance's
+  own error text instead of being mistaken for a closed timeline.
+- Everything in that log line that comes from the remote server is bounded:
+  the status is rebuilt from its code, the error text is cut to 200 bytes,
+  characters that do not print are removed, and the host is the one that
+  answered, never the configured URL with any credentials it carries.
+
 ## [0.1.0] - 2026-09-20
 
 First code. A USSD dialogue reaches a tenant application and a screen comes
@@ -56,4 +104,6 @@ back, with no telco account required.
 - The Redis session store has no tests.
 - No release pipeline. Build from source or use Docker Compose.
 
+[0.1.2]: https://github.com/davidrukahu/openussd/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/davidrukahu/openussd/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/davidrukahu/openussd/releases/tag/v0.1.0
