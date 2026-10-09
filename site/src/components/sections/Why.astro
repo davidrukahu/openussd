@@ -7,7 +7,7 @@ const benefits = [
     num: '01',
     mosaic: '/assets/mosaic-a.png',
     title: 'Clinic reminders',
-    desc: 'A clinic reminds patients of a visit and lets them confirm or change it by pressing a number. No app, no smartphone, no data bundle.',
+    desc: 'Patients confirm or change a clinic visit by pressing a number. No app, no smartphone, no data bundle.',
     art: 'screen',
     screen: 'Kiambu Health Centre\nYour visit: Tue 14 Oct\n1. Confirm\n2. Change date\n0. Quit',
   },
@@ -15,7 +15,7 @@ const benefits = [
     num: '02',
     mosaic: '/assets/mosaic-d.png',
     title: 'Savings group balances',
-    desc: 'Members of a chama check their savings and the next meeting date from any phone, any time, without waiting for the treasurer.',
+    desc: 'Chama members check their savings and the next meeting from any phone, without calling the treasurer.',
     art: 'screen',
     screen: 'Umoja Chama\nYour savings: KES 12,400\nNext meeting: Sat 2pm\n1. Contributions\n0. Quit',
   },
@@ -23,7 +23,7 @@ const benefits = [
     num: '03',
     mosaic: '/assets/mosaic-b.png',
     title: 'Community news',
-    desc: 'This one works today. The demo reads posts from Mastodon, a free and open social network, so a co-op or a school can reach people on basic phones.',
+    desc: 'This one works today: the demo reads posts from Mastodon, an open social network, on a basic phone.',
     art: 'screen',
     screen: screens[1].body,
   },
@@ -31,7 +31,7 @@ const benefits = [
     num: '04',
     mosaic: '/assets/mosaic-c.png',
     title: 'Build once, every network',
-    desc: "Each phone company connects in its own way. OpenUSSD translates, so you build your menu once. Africa's Talking works today; more networks are planned.",
+    desc: "Each phone company connects differently. OpenUSSD translates, so you build your menu once. Africa's Talking works today.",
     art: 'adapters',
   },
 ];
@@ -45,18 +45,15 @@ const active = '01';
     </div>
     <div class="why__lede">
       <p>
-        If you have dialled *334# for M-Pesa or *144# for your airtime
-        balance, you have used USSD. You dial a short code, a text menu
-        appears, and you reply with a number. It works on every phone, with
-        no app and no internet.
+        You have used USSD if you have dialled *334# for M-Pesa. A text menu
+        appears and you reply with a number. It works on every phone, with no
+        internet.
       </p>
       <p>
         In Sub-Saharan Africa, 60% of mobile internet subscribers still use a
-        basic phone or an old 3G smartphone
+        basic or 3G phone
         (<a href="https://www.gsma.com/somic/wp-content/uploads/2025/09/The-State-of-Mobile-Internet-Connectivity-2025-Overview-Report.pdf">GSMA, 2025</a>).
-        For many of them a menu like this is the only way to reach a service.
-        But building one means connecting to each phone company in its own
-        way, so today it is mostly banks and phone companies that do it.
+        Building a menu is hard, so mostly banks and phone companies have one.
         OpenUSSD is for everyone else.
       </p>
     </div>
@@ -97,8 +94,7 @@ const active = '01';
     ))}
   </ul>
   <p class="why__note">
-    The clinic and savings group screens are examples of what an organisation
-    could build; ready-made example apps are on the roadmap. The community
-    news screen is real output from the working demo.
+    The clinic and chama screens are examples. The community news screen is
+    real output from the demo.
   </p>
 </section>

@@ -1,5 +1,5 @@
 ---
-import { working, notYet, limitations, blob, issue } from '../../data/site';
+import { working, notYet, limitations, blob } from '../../data/site';
 /* Takes the place of the template's testimonials and pricing. Styled on its
    pricing cards: the first column carries the warm painting, as the
    template's featured plan does. */
@@ -11,9 +11,8 @@ import { working, notYet, limitations, blob, issue } from '../../data/site';
       <h2 class="h2" id="status-title">It works today.<br /><em>It is not ready for real users yet.</em></h2>
     </div>
     <p class="status__lede">
-      This is version 0.1, an early version. Here is what works, what is
-      still missing, and what to watch out for. Parts will change before
-      version 1.0.
+      Version 0.1 is an early version. Here is what works, what is missing
+      and what to watch out for.
     </p>
   </header>
 
@@ -43,11 +42,7 @@ import { working, notYet, limitations, blob, issue } from '../../data/site';
   </div>
 
   <p class="status__note">
-    The plan, task by task, is in <a href={`${blob}/ROADMAP.md`}>ROADMAP.md</a>,{' '}
-    and deliberate deferrals are recorded in <a href={`${blob}/TODOS.md`}>TODOS.md</a>.
-    Contributions are welcome: see the <a href={`${blob}/CONTRIBUTING.md`}>guide</a>{' '}
-    and <a href={`${blob}/CODE_OF_CONDUCT.md`}>code of conduct</a>. If you have
-    integrated against an African network, <a href={issue(11)}>#11</a>{' '}wants to
-    hear what surprised you.
+    The full plan is in the <a href={`${blob}/ROADMAP.md`}>roadmap</a>. Want to
+    help? Read the <a href={`${blob}/CONTRIBUTING.md`}>contributing guide</a>.
   </p>
 </section>
