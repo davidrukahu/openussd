@@ -10,7 +10,7 @@
 
 [openussd.org](https://openussd.org)
 
-OpenUSSD is an open-source gateway and software development kit that makes web services accessible from feature phones over USSD, with SMS planned.
+OpenUSSD is an open-source gateway and software development kit for developers and public-interest organisations that run USSD services, the `*123#` menus that work on every phone, and want to own them. It runs on your own server, so the service and its data stay yours, and it works across providers instead of tying you to one. SMS and direct network connections over SMPP are planned.
 
 A working vertical slice is in this repository: you can dial a shortcode from your terminal and read a Mastodon timeline, with no telco account.
 
@@ -21,6 +21,14 @@ In Sub-Saharan Africa, 60% of mobile internet subscribers still use a feature ph
 Today, every service that wants USSD reach rebuilds the integration against proprietary gateway APIs (Africa's Talking, Infobip and others), country by country, telco by telco. Good open-source work exists: application frameworks such as [laravel-ussd](https://github.com/spesohq/laravel-ussd), which renders responses for several aggregators, and Praekelt's [vumi2](https://github.com/praekeltfoundation/vumi2), the actively developed successor to [Vumi](https://github.com/praekeltfoundation/vumi) (archived after its last commit in 2020), with USSD and SMPP transports. OpenUSSD's focus is different: a small gateway one person can self-host, a canonical session model with a signed webhook any language can implement, SDKs that measure every screen in the encoding the network will use, and a bridge between USSD and the federated web.
 
 OpenUSSD treats feature-phone users as a legitimate audience for the open web rather than a legacy to be replaced.
+
+## Who it is for
+
+- Developers and agencies that build USSD services for several clients, countries or providers.
+- Public-interest organisations, such as health, education, farming and local government teams, that want to run their own service and keep their data.
+- Teams that want to connect to a network directly over SMPP instead of through a provider (planned).
+
+If you need one simple menu in one country, a provider such as Africa's Talking on its own may be enough.
 
 ## What
 

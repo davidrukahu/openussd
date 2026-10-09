@@ -10,7 +10,7 @@ export const issue = (n: number) => `${repo}/issues/${n}`;
 
 export const title = 'OpenUSSD: reach any phone with a *123# menu';
 export const description =
-  'Free, open-source software that lets any organisation build a USSD menu, the *123# kind that works on every phone without internet, once for every network.';
+  'Free, open-source software for developers and public-interest organisations that build USSD menus, the *123# kind that works on every phone. Self-hosted, so you own the service and its data.';
 
 export interface NavLink { href: string; label: string }
 
@@ -107,11 +107,19 @@ export const faqs: FaqItem[] = [
   },
   {
     q: 'Who is OpenUSSD for?',
-    a: 'Clinics, schools, savings groups, co-ops, local government, and the developers who build for them. People who dial the code only see the menu.',
+    a: 'Developers and public-interest organisations, such as health, education, farming and local government teams, that run USSD services and want to own them. If you need one simple menu in one country, a provider on its own may be enough.',
   },
   {
     q: 'Why not just use a USSD provider, such as Africa\'s Talking?',
     a: 'You still use one. A provider connects you to the phone networks, but you build the menu yourself, in that provider\'s own format. OpenUSSD does the hard parts once, such as remembering each step, fitting every screen and checking where requests come from. It also lets you change or add providers without rewriting your menu. Today it supports Africa\'s Talking; more providers are planned.',
+  },
+  {
+    q: 'Who sees the data?',
+    a: 'You, your provider and the phone network. OpenUSSD runs on your own server, and there is no OpenUSSD company or cloud in between.',
+  },
+  {
+    q: 'Can I connect to a phone network directly?',
+    a: 'Not yet. Direct connections over SMPP, a protocol many networks offer, are planned. They remove the provider in the middle, but need an agreement with the network.',
   },
   {
     q: 'Do I need an agreement with a phone company?',
