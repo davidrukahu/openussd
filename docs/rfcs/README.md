@@ -1,9 +1,9 @@
 # RFCs
 
-Design notes and proposals that need discussion before code lands. Anyone can open a PR adding a new RFC; format is loose but generally:
+Design notes and proposals that need discussion before the code lands. Anyone can open a PR that adds a new RFC. The format is loose, but an RFC usually has these parts:
 
 - **Status:** draft / accepted / superseded
-- **Context** - what is the problem
+- **Context** - what the problem is
 - **Decision** - what we propose
 - **Alternatives** - what we considered and rejected
 - **Open questions**

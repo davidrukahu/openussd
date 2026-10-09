@@ -1,11 +1,14 @@
 # OpenUSSD architecture (sketch)
 
 > Status: **draft**, partially implemented as of 2026-09. The gateway, the
-> Go SDK, and a read-only Fediverse adapter exist and run end to end; see
-> the repository README for what is and is not built. Expect breaking
+> Go SDK and a read-only Fediverse adapter exist and run end to end. The
+> repository README says what is built and what is not. Expect breaking
 > changes until v1.0.
 
-This document describes how the three OpenUSSD components fit together: the **gateway**, the **SDK**, and the reference **Fediverse adapter**. It is intentionally short and decision-oriented; each subsystem will get a deeper RFC under [`rfcs/`](rfcs/) before code lands.
+This document describes how the three OpenUSSD components fit together:
+the **gateway**, the **SDK** and the reference **Fediverse adapter**. It is
+short on purpose and focuses on decisions. Each subsystem will get a deeper
+RFC under [`rfcs/`](rfcs/) before its code lands.
 
 ## High-level diagram
 
@@ -34,7 +37,7 @@ This document describes how the three OpenUSSD components fit together: the **ga
             |           v            |                |
             |  ┌──────────────────┐  |                |
             |  │ Session store    │  |                |
-            |  │ (Redis/Postgres) │  |                |
+            |  │ (memory or Redis)│  |                |
             |  └────────┬─────────┘  |                |
             |           v            |                |
             |  ┌──────────────────┐  |                |
@@ -47,7 +50,7 @@ This document describes how the three OpenUSSD components fit together: the **ga
             +------------------------+                |
             |  Application using     |                |
             |  the OpenUSSD SDK      |                |
-            |  (Go or TypeScript)    |                |
+            |  (Go today)            |                |
             |                        |                |
             |  ┌──────────────────┐  |                |
             |  │ State machine    │  |                |
@@ -65,43 +68,112 @@ This document describes how the three OpenUSSD components fit together: the **ga
 
 ### 1. Gateway
 
-A self-hostable Go service. Responsibilities:
+A self-hostable Go service. It has these responsibilities:
 
-- **Telco adapter layer.** Per-network or per-aggregator handlers (Africa's Talking today; MTN and SMPP planned) that accept the network's or aggregator's native callback format and translate it into a single canonical session event the rest of the system understands. Each adapter is a small package implementing one interface; adding an MNO is one new file plus contract tests.
-- **Session store.** Each USSD screen is an independent HTTP request; the gateway maintains continuity across screens. Sessions are addressed by `(mno, session_id)` and carry an opaque blob owned by the application. The default backing store is in-process memory, which is correct for a single replica and is what the demo runs on. Redis is the option for more than one replica, since two replicas would otherwise each hold half of every conversation. A durable Postgres audit store is designed for but not built. Session timeout default 180s of user inactivity.
-- **Tenant router.** Most African shortcodes are shared. The gateway routes `(shortcode, sub-prefix)` to a tenant configuration and forwards the canonical event to that tenant's webhook URL. Per-tenant secrets sign outbound webhooks so applications can verify the request origin.
-- **Outbound channels (planned).** SMS and USSD push for asynchronous notifications. Same telco-adapter abstraction as inbound.
-- **Observability.** Structured logs today; per-tenant metrics and sampled session traces are planned. The audit log, once the Postgres store exists, is the source of truth for "what did the user actually see?".
+- **Telco adapter layer.** There is one handler per network or per
+  aggregator. (A network is a mobile network operator, shown as MNO in the
+  diagram.) Africa's Talking works today. MTN and SMPP (Short Message
+  Peer-to-Peer) are planned. Each handler accepts the native callback
+  format of its network or aggregator. It translates that format into one
+  canonical session event that the rest of the system understands. Each
+  adapter is a small package that implements one interface. Adding a
+  network takes one new file plus contract tests.
+- **Session store.** USSD (Unstructured Supplementary Service Data) is the
+  text menu service a user reaches by dialling a code on a mobile phone.
+  Each USSD screen is an independent HTTP request, so the gateway keeps the
+  conversation continuous across screens. Sessions are addressed by
+  `(mno, session_id)` and carry an opaque blob that the application owns.
+  The default store keeps sessions in process memory. This is correct for
+  a single replica, and the demo runs on it. Redis is the option for more
+  than one replica, because otherwise two replicas would each hold half of
+  every conversation. A durable Postgres audit store is designed for but
+  not built. The default session timeout is 180s of user inactivity.
+- **Tenant router.** A tenant is an application that receives webhooks
+  from the gateway. Most African shortcodes are shared. The gateway routes
+  `(shortcode, sub-prefix)` to a tenant configuration. It then forwards the
+  canonical event to that tenant's webhook URL. Each tenant has its own
+  secret, and the gateway signs outbound webhooks with it. This lets
+  applications verify where a request came from.
+- **Outbound channels (planned).** SMS and USSD push for asynchronous
+  notifications. They use the same telco adapter abstraction as inbound
+  traffic.
+- **Observability.** The gateway writes structured logs today. Per-tenant
+  metrics and sampled session traces are planned. Once the Postgres store
+  exists, its audit log is the source of truth for "what did the user
+  actually see?".
 
 License: AGPL-3.0-or-later.
 
 ### 2. SDK
 
-Two packages, one design. Released as `github.com/davidrukahu/openussd/sdk/go` and `@openussd/sdk` (npm) once split.
+The Go SDK is in [`sdk/go`](../sdk/go) today, as the module
+`github.com/davidrukahu/openussd/sdk/go`. A TypeScript SDK with the same
+design is planned, to be published on npm as `@openussd/sdk`.
 
-Core primitives:
+What the Go SDK gives you:
 
-- **`Session`** - typed value object exposing the user's MSISDN, language, tenant, and an application-defined state struct. The SDK persists state back to the gateway on each turn.
-- **`State` / `Screen`** - a state machine. Each state declares the prompt to render, the input it accepts, and the transitions it allows. Inputs are validated before transitioning; invalid input re-renders the same screen with an error.
-- **`Render`** - helpers for the per-screen budget: `Truncate`, `Paginate`, `Menu`, `MenuFit`, `Shrink`, with i18n bundles (Swahili, French, English at launch). Rendered output is measured at runtime as a guard.
+- **`App` and `Screen`** - an app is a set of named screens. Each screen
+  has a `Prompt` that renders what the user sees, and a `Handle` that reads
+  the user's reply. `Handle` returns an action: `Goto` another screen,
+  `Stay` on this screen with a message (the path for invalid input, so the
+  user sees what went wrong without losing their place), or `Finish` the
+  session with a final message.
+- **`Context`** - what a screen sees on each turn: the canonical event,
+  including the phone number (MSISDN, the subscriber number as the network
+  reports it), the turn number, the language, translations through `T`,
+  and the app's own state. The state is a typed Go value. The SDK stores it
+  in the gateway between turns.
+- **`Handler`** - an `http.Handler` that checks the webhook signature and
+  runs one turn of the app.
+- **Screen budget helpers** - `Truncate`, `Paginate`, `Menu`, `MenuFit`,
+  `Shrink`, `Fits` and `ToGSM`, with translation bundles (`Bundle`) for
+  English, Swahili and French. The SDK also measures rendered output at
+  runtime, as a guard.
 
-  The budget is not a single number. GSM 03.38 packs 182 septets into a USSD string, but any character outside that alphabet - an emoji, a Chinese character, a curly quote - re-encodes the whole screen as UCS-2, where the limit is 70 units. The SDK measures cost in the encoding the text itself forces, and offers `ToGSM` to transliterate where the trade is worth making: a menu of fediverse display names is worth more than the emoji in them, while a post written in Chinese is not worth anything transliterated, so it simply paginates further.
-- **`Auth`** - opt-in PIN and OTP flows. Documents the spoofing risks of trusting MNO-supplied MSISDNs and gives vetted defaults.
+  The budget is not a single number. GSM 03.38 is the standard 7-bit GSM
+  alphabet, also called GSM-7, and it packs 182 septets (7-bit characters)
+  into a USSD string. Any character outside that alphabet changes this. An
+  emoji, a Chinese character or a curly quote re-encodes the whole screen
+  as UCS-2, a 16-bit encoding where the limit is 70 units. The SDK measures
+  cost in the encoding that the text itself forces. It offers `ToGSM` to
+  transliterate text where the trade is worth making. A menu of fediverse
+  display names is worth more than the emoji in them. A post written in
+  Chinese is worth nothing once transliterated, so it simply paginates
+  further.
 
-Out of scope for v1: visual flow builders, IVR, WhatsApp.
+PIN and OTP (one-time password) flows are planned, not built. Until then,
+the SDK documents that the phone number is a claim by the network, and
+advises a PIN or OTP before anything that matters.
 
-License: AGPL-3.0-or-later while in monorepo, Apache-2.0 if/when SDK packages are split out so they can embed in proprietary apps without copyleft propagation.
+Out of scope for v1: visual flow builders, IVR (interactive voice response),
+WhatsApp.
+
+License: AGPL-3.0-or-later while the SDK is in the monorepo. If and when
+the SDK packages are split out, they move to Apache-2.0, so proprietary
+apps can embed them without copyleft propagation.
 
 ### 3. Fediverse adapter
 
-A reference application (not a framework) built on the SDK. Demonstrates ActivityPub → USSD mapping decisions:
+A reference application built on the SDK. It is not a framework.
+ActivityPub is the protocol that Fediverse servers use to talk to each
+other. This adapter shows the decisions we made when mapping ActivityPub to
+USSD:
 
-- **Read paths first.** Mastodon home / public timeline, PeerTube channel titles, PixelFed feeds, rendered into paginated USSD menus.
-- **Write paths second.** Posting, replying, boosting, follow-from-USSD. PIN-gated.
-- **Identity.** Each MSISDN binds to one Fediverse account via an enrolment flow (USSD-initiated, browser-completed). Spoof-resistant via a one-time link delivered to the bound account.
-- **Character-budget strategy.** Long posts paginate with `Next` / `Prev` controls; image attachments surface as `[image: alt text]`; mentions and hashtags survive truncation.
+- **Read paths first.** Mastodon home and public timelines, PeerTube
+  channel titles and PixelFed feeds, rendered as paginated USSD menus.
+- **Write paths second.** Posting, replying, boosting and following from
+  USSD. All of these need a PIN.
+- **Identity.** Each MSISDN binds to one Fediverse account through an
+  enrolment flow. The user starts the flow on USSD and completes it in a
+  browser. A one-time link delivered to the bound account makes the flow
+  resistant to spoofing.
+- **Character-budget strategy.** Long posts paginate with `Next` / `Prev`
+  controls. Image attachments appear as `[image: alt text]`. Mentions and
+  hashtags survive truncation.
 
-This component is the research contribution as much as the engineering - the goal is to publish a clear protocol-mapping document alongside the code so other implementers can reuse the design.
+This component is the research contribution as much as the engineering
+one. The goal is to publish a clear protocol-mapping document next to the
+code, so other implementers can reuse the design.
 
 License: AGPL-3.0-or-later.
 
@@ -109,46 +181,60 @@ License: AGPL-3.0-or-later.
 
 ### Security
 
-- **Webhook signing** between gateway and tenant applications using shared secrets, rotated per tenant.
-- **MNO claim trust boundary** explicitly documented. The gateway treats MNO-supplied MSISDNs as *claims* and surfaces them to applications as such; PIN or OTP checks are planned for any flow that needs higher assurance.
-- **Independent security audit** planned before v1.0; see [`ROADMAP.md`](../ROADMAP.md).
+- Webhooks between the gateway and tenant applications are signed with
+  shared secrets. The secrets are rotated per tenant.
+- We document the trust boundary for network claims explicitly. The
+  gateway treats MSISDNs supplied by the network as *claims* and passes
+  them to applications as claims. PIN or OTP checks are planned for any
+  flow that needs higher assurance.
+- An independent security audit is planned before v1.0. See
+  [`ROADMAP.md`](../ROADMAP.md).
 
 ### Multi-tenancy
 
-- Tenants are isolated at the routing layer. Session payloads are tenant-scoped; the SDK cannot read another tenant's state even if deployed in the same process (different signing keys, different webhook URLs).
-- The gateway never persists application-level PII beyond the session window; durable storage of conversation state is the application's concern.
+- Tenants are isolated at the routing layer. Each session payload belongs
+  to one tenant. The SDK cannot read another tenant's state, even when
+  deployed in the same process, because each tenant has a different
+  signing key and a different webhook URL.
+- The gateway never persists application-level PII (personally
+  identifiable information) beyond the session window. Durable storage of
+  conversation state is the application's job.
 
 ### Telco coverage at v1
 
 Year-1 targets:
 
-- **Africa's Talking** (implemented) - an aggregator reaching Safaricom and
-  Airtel in Kenya, MTN and Airtel in Uganda, and several other markets from
-  one adapter. It is the only USSD sandbox obtainable without a commercial
-  agreement, which is why it is first.
-- **Safaricom direct** - requires a commercial shortcode agreement with a
-  registered Kenyan entity, so it belongs in the funded phase. Note that
-  Daraja, named in earlier drafts, is the M-Pesa API portal and exposes no
+- **Africa's Talking** (implemented) - an aggregator. One adapter reaches
+  Safaricom and Airtel in Kenya, MTN and Airtel in Uganda, and several
+  other markets. It is the only USSD sandbox you can get without a
+  commercial agreement, which is why it comes first.
+- **Safaricom direct** - needs a commercial shortcode agreement with a
+  registered Kenyan entity, so it belongs in the funded phase. Earlier
+  drafts named Daraja, but Daraja is the M-Pesa API portal and exposes no
   USSD. See [`telco-access.md`](telco-access.md).
-- **MTN USSD** - against MTN's published USSD API, in one market once
-  access is confirmed.
+- **MTN USSD** - built against MTN's published USSD API, in one market,
+  once access is confirmed.
 - **SMPP** - the protocol many aggregators and operators use between
   themselves, so one adapter can reach several providers.
 
-Architectural placeholder for SS7-level signaling exists but is out of scope for v1.
+The architecture has a placeholder for SS7-level signaling (SS7 is the
+signaling system inside operator networks), but it is out of scope for v1.
 
 ## Open questions (tracked in RFCs)
 
 1. ~~Canonical session-event schema~~ - implemented and validated against a
    first adapter; see [`rfcs/0001-telco-adapter-interface.md`](rfcs/0001-telco-adapter-interface.md).
-   Still draft until a second real network lands.
+   It stays draft until a second real network lands.
 2. ~~Session-state encoding (CBOR vs JSON)~~ - **JSON, opaque to the
-   gateway**. Being able to read live state with `redis-cli` during an
-   incident beats CBOR's ~30% saving until Redis pressure is measurable,
-   and the codec seam remains for when it is ([#10](https://github.com/davidrukahu/openussd/issues/10)).
-3. ActivityPub identity binding flow - how do we prove the USSD user owns the Fediverse account they claim? Still open; the shipped adapter is read-only precisely because this is unresolved ([#9](https://github.com/davidrukahu/openussd/issues/9)).
-4. Whether PeerTube and PixelFed adapters are first-class in v1 or stretch goals.
+   gateway**. During an incident, reading live state with `redis-cli` is
+   worth more than CBOR's ~30% saving, until Redis pressure is measurable.
+   The codec seam stays in place for when it is ([#10](https://github.com/davidrukahu/openussd/issues/10)).
+3. ActivityPub identity binding flow: how do we prove that the USSD user
+   owns the Fediverse account they claim? This is still open. The shipped
+   adapter is read-only because this question is unresolved ([#9](https://github.com/davidrukahu/openussd/issues/9)).
+4. Whether the PeerTube and PixelFed adapters are first-class in v1 or
+   stretch goals.
 5. **New:** how should a shared shortcode render its first screen? The
    router requires exactly one tenant per shortcode with an empty prefix to
-   answer it. A gateway-owned selection menu is the alternative, and that
-   is a product decision rather than a default.
+   answer it. The alternative is a selection menu owned by the gateway.
+   That is a product decision, not a default.

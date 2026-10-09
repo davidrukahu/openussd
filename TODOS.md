@@ -37,8 +37,8 @@ simulator does not count: it is ours, so it cannot disagree with us.
 
 The signature's 5-minute timestamp window bounds replay but does not prevent
 it. A nonce inside the signed string plus a seen-cache would. Documented as
-a limitation in `docs/webhook-protocol.md`, which tells tenants to
-deduplicate on `(session_id, turn)` meanwhile.
+a limitation in `docs/webhook-protocol.md`, which tells tenants how to
+deduplicate meanwhile; see the idempotency key entry below.
 
 ### Ship the simulator adapter disabled by default
 

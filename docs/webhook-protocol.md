@@ -1,14 +1,14 @@
 # Tenant webhook protocol
 
-> Status: **v1**, draft. Implemented by the gateway and by the Go SDK. Expect
-> changes before v1.0 of the project, signalled by the `version` field below.
+> Status: **v1**, draft. The gateway and the Go SDK implement it. Expect
+> changes before v1.0 of the project. The `version` field below signals them.
 
-This is everything needed to write a tenant application in any language. The
-[Go SDK](../sdk/go) implements this protocol; it is a convenience, not a
-requirement.
+This page has everything you need to write a tenant application in any
+language. The [Go SDK](../sdk/go) implements this protocol. It saves you work,
+but you do not have to use it.
 
-A tenant is an HTTP endpoint. The gateway POSTs one signed JSON request per
-screen and expects one JSON reply.
+A tenant is an HTTP endpoint. For each screen, the gateway POSTs one signed
+JSON request and expects one JSON reply.
 
 ## Request
 
@@ -53,15 +53,17 @@ X-OpenUSSD-Signature: v1=3f9a...c2
 | `event.network_code` | string | MNO-reported network identifier where the adapter has one. Omitted otherwise. |
 | `event.received_at` | string | RFC 3339, when the gateway accepted the request. |
 
-`event.raw`, the MNO's original bytes, exists on the gateway's internal type
-but is always stripped before delivery. Do not expect it.
+`event.raw` holds the original bytes from the MNO (mobile network operator).
+It exists on the gateway's internal type, but the gateway always strips it
+before delivery. Do not expect it.
 
-**Unknown fields must be ignored.** Adding a field is not a version change.
+**You must ignore unknown fields.** Adding a field is not a version change.
 
 ## Reply
 
-Reply `200 OK` with `Content-Type: application/json`. Any other status fails
-the dialogue, and the subscriber gets the gateway's generic error screen.
+Reply with `200 OK` and `Content-Type: application/json`. Any other status
+fails the dialogue, and the subscriber gets the gateway's generic error
+screen.
 
 ```json
 {
@@ -78,42 +80,50 @@ the dialogue, and the subscriber gets the gateway's generic error screen.
 | `state` | any | Replaces the stored state. **Omit it to keep what is stored**, so a handler that only reads state need not echo it back. |
 | `clear_state` | bool | Discards the stored state even when `state` is set. |
 
-The reply must be at most 16KB. Since `state` rides in it, whatever you store
-is bounded by that too.
+The reply must be at most 16 KiB (16,384 bytes). `state` travels inside the reply, so the
+state you store must fit inside that limit too.
 
 ### The screen budget
 
-A screen holds **182 characters** in the GSM 03.38 alphabet. One character
-outside that alphabet, an emoji, a non-Latin script, even a curly quote, and
-the whole string is sent as UCS-2 where the limit is **70 16-bit units**, with
-characters outside the Basic Multilingual Plane costing two.
+A screen holds **182 characters** in the GSM 03.38 alphabet. GSM 03.38, also
+called GSM-7, is the 7-bit alphabet of the GSM standard. It covers basic Latin
+letters, digits and some symbols.
 
-The gateway rejects a reply whose body does not fit, and the subscriber gets
-an error rather than a truncated screen. Measure before you send.
+One character outside that alphabet changes the whole screen. That character
+can be an emoji, a letter from a non-Latin script, or even a curly quote. The
+whole string is then sent as UCS-2, a 16-bit encoding, where the limit is
+**70 16-bit units**. A character outside the Basic Multilingual Plane costs
+two units.
+
+The gateway rejects a reply whose body does not fit. The subscriber then gets
+an error, not a truncated screen. Measure the body before you send it.
 
 ## Signature
 
-Every request is signed. Verify it before you decode: the endpoint is a
-public URL, and the payload asserts a subscriber's phone number.
+The gateway signs every request. Verify the signature before you decode the
+body. Your endpoint is a public URL, and the payload claims a subscriber's
+phone number.
 
-The signed string is `<timestamp>.<body>`, where `body` is the raw bytes of
-the request and `timestamp` is the value of `X-OpenUSSD-Timestamp`:
+The signed string is `<timestamp>.<body>`. Here `body` is the raw bytes of
+the request, and `timestamp` is the value of `X-OpenUSSD-Timestamp`:
 
 ```
 signature = "v1=" + hex(HMAC_SHA256(secret, timestamp + "." + body))
 ```
 
-To verify:
+To verify a request:
 
-1. Read the raw body **before** parsing it. The signature covers bytes, and
-   re-serialising the JSON will not reproduce them.
+1. Read the raw body **before** you parse it. The signature covers bytes. If
+   you parse the JSON and serialise it again, you will not get the same
+   bytes.
 2. Reject a timestamp more than 5 minutes from your own clock, in either
    direction.
-3. Recompute the signature and compare in **constant time**. A byte-at-a-time
-   compare leaks the expected value to anyone willing to time a few thousand
-   requests.
+3. Compute the signature yourself with the formula above.
+4. Compare it with the received signature in **constant time**. A comparison
+   that goes one byte at a time leaks the expected value to anyone willing to
+   time a few thousand requests.
 
-Python, for illustration:
+Here is the check in Python, as an illustration:
 
 ```python
 import hashlib, hmac, time
@@ -129,37 +139,40 @@ def verify(headers, body: bytes, secret: str) -> bool:
     return hmac.compare_digest(got, want)
 ```
 
-The `v1=` prefix versions the signature scheme independently of the payload
-version, so either can rotate without the other.
+The `v1=` prefix gives the signature scheme its own version, separate from
+the payload version. So either one can change to a new version without the
+other.
 
-**Replay:** the timestamp window bounds replay to 5 minutes but does not
-prevent it, and there is no nonce yet.
+**Replay:** the timestamp window limits replay to 5 minutes, but it does not
+prevent replay. There is no nonce yet.
 
-Make anything with side effects idempotent at the application level, keyed
-on something your own handler decides, such as the state you are about to
-leave. Do not key on `(session_id, turn)`: `turn` is the gateway's own
-counter rather than anything the network sent, so a retried callback can
-arrive with a higher turn than the input it repeats, and a retry after a
-storage failure can arrive with the same turn as genuinely new input.
-Tightening this is tracked in the repository's TODOS.
+Make anything with side effects idempotent in your application: doing it
+twice must have the same effect as doing it once. Use a key that your own
+handler decides, such as the state you are about to leave. Do not use
+`(session_id, turn)` as the key. `turn` is the gateway's own counter, not a
+value the network sent. A retried callback can arrive with a higher turn than
+the input it repeats. A retry after a storage failure can arrive with the same
+turn as input that really is new. The repository's TODOS file tracks the work
+to tighten this.
 
 ## The MSISDN is a claim
 
-The network asserts the subscriber's number and the gateway passes the
-assertion along. Anything that can reach the gateway's inbound endpoint can
-claim any number, and for adapters whose provider signs nothing the only
-control is a source-address allowlist.
+The MSISDN is the subscriber's phone number. The network claims the number,
+and the gateway passes that claim on. Anything that can reach the gateway's
+inbound endpoint can claim any number. Some adapters use a provider that signs
+nothing. For those adapters, the only control is a source-address allowlist.
 
-Treat it as a routing hint. Put a PIN or an OTP in front of anything that
-matters.
+Treat the number as a routing hint. Put a PIN or an OTP (one-time password)
+in front of anything that matters.
 
 ## Sessions
 
-Each screen is an independent HTTP request. The gateway keeps the dialogue
-continuous and expires it 180 seconds after the last turn, matching what
-networks allow. You do not need your own session store: put what you need in
-`state`.
+Each screen is a separate HTTP request. The gateway joins these requests into
+one continuous dialogue. By default it expires the dialogue 180 seconds after the last
+turn, which matches what networks allow. Operators can change this with
+`session.ttl`. You do not need your own session
+store. Put what you need in `state`.
 
-On a shared shortcode a dialogue can be handed from one tenant to another
-when a routing prefix first matches. The new tenant starts with no state; it
-cannot read what the previous one stored.
+On a shared shortcode, the gateway can hand a dialogue from one tenant to
+another when a routing prefix first matches. The new tenant starts with no
+state. It cannot read what the previous tenant stored.
