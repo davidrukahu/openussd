@@ -1,0 +1,25 @@
+---
+/**
+ * Exact port of the Framer "Buttons/button" component.
+ * Chip holds two stacked chevrons that slide on hover; the label is a clipped
+ * roller with two stacked copies that rolls up by its own 18px line height.
+ */
+export interface Props {
+  href: string;
+  label: string;
+  variant?: 'primary' | 'secondary' | 'tertiary';
+  full?: boolean;
+  class?: string;
+}
+const { href, label, variant = 'primary', full = false, class: extra = '' } = Astro.props;
+const cls = ['fbtn', `fbtn--${variant}`, full && 'fbtn--full', extra].filter(Boolean).join(' ');
+---
+<a href={href} class={cls}>
+  <span class="fbtn__chip"
+    ><span class="fbtn__arrows"
+      ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg
+      ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg
+    ></span
+  ></span
+  ><span class="fbtn__label"><span>{label}</span><span aria-hidden="true">{label}</span></span>
+</a>

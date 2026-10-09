@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import Button from '../components/Button.astro';
+---
+<Base
+  title="Page not found | OpenUSSD"
+  description="This page does not exist on the OpenUSSD site."
+  path="/404"
+  cta={false}
+  noindex
+>
+  <section class="nf" aria-labelledby="nf-title">
+    <img class="nf__mosaic" src="/assets/404-mosaic.jpg" alt="" />
+    <p class="nf__code" aria-hidden="true">404</p>
+    <h1 class="nf__title" id="nf-title">That screen does not exist. Press 0 to go back.</h1>
+    <Button href="/" label="Go to the home page" variant="primary" />
+  </section>
+</Base>

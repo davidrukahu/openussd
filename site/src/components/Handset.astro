@@ -1,0 +1,17 @@
+---
+import type { Screen } from '../data/site';
+/** One USSD screen in a handset frame, at the 32-column width cmd/ussdsim
+ *  draws, so lines break where a handset would break them. */
+export interface Props { screen: Screen; code?: string; class?: string }
+const { screen, code = '*384*1234#', class: extra = '' } = Astro.props;
+---
+<figure class={`handset ${extra}`}>
+  <div class="handset__bar" aria-hidden="true">
+    <span>{code}</span>
+    <span class="handset__signal"><i></i><i></i><i></i><i></i></span>
+  </div>
+  <pre class="handset__screen"><span class="visually-hidden">Handset screen: </span>{screen.body}</pre>
+  <figcaption class={`handset__meter${screen.encoding === 'UCS-2' ? ' is-ucs' : ''}`}>
+    <i aria-hidden="true"></i>{screen.encoding} · {screen.cost}<span class="visually-hidden"> characters used</span>
+  </figcaption>
+</figure>

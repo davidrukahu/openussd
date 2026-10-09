@@ -1,0 +1,33 @@
+---
+import { footerColumns, repo } from '../../data/site';
+---
+<footer class="footer" id="footer">
+  <div class="footer__inner">
+    <div class="footer__top">
+      <a class="footer__wordmark" href="/">OpenUSSD</a>
+      <a class="footer__source" href={repo}>Source on GitHub</a>
+    </div>
+
+    <div class="footer__mid">
+      <p class="footer__tagline">An open gateway and SDK for the feature-phone web.</p>
+      <nav class="footer__cols" aria-label="Footer">
+        {footerColumns.map((col) => (
+          <div class="footer__col">
+            <p class="footer__col-title"><span class="footer__square"></span>{col.title}</p>
+            {col.links.map((l) => <a href={l.href}>{l.label}</a>)}
+          </div>
+        ))}
+      </nav>
+    </div>
+
+    <div class="footer__mark">
+      <p class="footer__watermark" aria-hidden="true">OpenUSSD</p>
+      <img class="footer__mosaic" src="/assets/footer-mosaic.png" alt="" loading="lazy" />
+
+      <div class="footer__bottom">
+        <p>© 2026 OpenUSSD contributors</p>
+        <p>Design based on <a href="https://github.com/agnilem/parley-astro">Parley by Alex Prokhorov (MIT)</a></p>
+      </div>
+    </div>
+  </div>
+</footer>

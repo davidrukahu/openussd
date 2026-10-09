@@ -17,7 +17,8 @@
       "name": "OpenUSSD",
       "description": "An open-source gateway and SDK that makes web services accessible from feature phones over USSD, with SMS planned. Three components: a self-hostable gateway with multi-tenant routing and one telco-adapter interface over networks and aggregators; SDKs for building USSD applications as state machines with typed sessions, i18n, and screens measured in the encoding the network uses (182 GSM-7 characters, or 70 UCS-2); and a reference adapter that exposes ActivityPub Fediverse content through USSD menus. v0.1 ships the gateway, the Go SDK and a read-only Mastodon adapter; a TypeScript SDK is planned. Aimed at Sub-Saharan Africa, where 60% of mobile internet subscribers still use feature phones or 3G smartphones (GSMA 2025).",
       "webpageUrl": {
-        "url": "https://openussd.org"
+        "url": "https://openussd.org",
+        "wellKnown": "https://openussd.org/.well-known/funding-manifest-urls"
       },
       "repositoryUrl": {
         "url": "https://github.com/davidrukahu/openussd"

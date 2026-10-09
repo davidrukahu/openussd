@@ -1,0 +1,42 @@
+/* ============================================================
+   The project's 14 text styles, one class each. Sizes come from
+   tokens.css (which carries the Tablet/Phone overrides), weights,
+   line-heights and default colors are fixed per style.
+   ============================================================ */
+
+.ts-h1, .ts-h2, .ts-h3, .ts-h4, .ts-h4-italic, .ts-h5,
+.ts-card-title, .ts-number {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--grey-900);
+  text-wrap: balance;
+}
+
+.ts-h1          { font-weight: var(--h1-weight); font-size: var(--h1-size); line-height: var(--h1-line); }
+.ts-h2          { font-weight: var(--h2-weight); font-size: var(--h2-size); line-height: var(--h2-line); }
+.ts-h3          { font-weight: var(--h3-weight); font-size: var(--h3-size); line-height: var(--h3-line); }
+.ts-h4          { font-weight: var(--h4-weight); font-size: var(--h4-size); line-height: var(--h4-line); }
+.ts-h4-italic   { font-weight: var(--h4-weight); font-size: var(--h4-size); line-height: var(--h4-line); font-style: italic; }
+.ts-h5          { font-weight: var(--h5-weight); font-size: var(--h5-size); line-height: var(--h5-line); }
+.ts-card-title  { font-weight: var(--h5-weight); font-size: var(--card-title-size); line-height: var(--h5-line); }
+.ts-number      { font-weight: var(--h2-weight); font-size: var(--number-size); line-height: var(--h2-line); }
+
+.ts-badge, .ts-xl, .ts-l, .ts-m, .ts-s, .ts-button {
+  margin: 0;
+  font-family: var(--font-ui);
+}
+
+.ts-badge  { font-weight: var(--badge-weight); font-size: var(--badge-size); line-height: var(--badge-line); color: var(--brand-500); }
+.ts-xl     { font-weight: var(--body-weight); font-size: var(--xl-size); line-height: var(--body-line); color: var(--grey-800); }
+.ts-l      { font-weight: var(--body-weight); font-size: var(--l-size);  line-height: var(--body-line); color: var(--grey-800); }
+.ts-m      { font-weight: var(--body-weight); font-size: var(--m-size);  line-height: var(--body-line); color: var(--grey-800); }
+.ts-s      { font-weight: var(--body-weight); font-size: var(--s-size);  line-height: var(--body-line); color: var(--grey-800); }
+.ts-button { font-weight: var(--button-weight); font-size: var(--button-size); line-height: var(--button-line); color: var(--white); }
+
+/* The heading elements the pages already use are pinned to the same
+   values, so existing markup inherits the project's real type ramp. */
+h1 { font-weight: var(--h1-weight); line-height: var(--h1-line); }
+h2 { font-weight: var(--h2-weight); line-height: var(--h2-line); }
+h3 { font-weight: var(--h3-weight); line-height: var(--h3-line); }
+h4 { font-weight: var(--h4-weight); line-height: var(--h4-line); }
+h5 { font-weight: var(--h5-weight); line-height: var(--h5-line); }

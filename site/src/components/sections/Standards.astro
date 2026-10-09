@@ -1,0 +1,33 @@
+---
+/* The template's integrations grid, with text tiles in place of product
+   logos: these are the specifications the code is written against. */
+const tiles = [
+  { name: 'GSM 03.38', spec: '3GPP TS 23.038', note: 'The 7-bit alphabet every screen is measured in, with UCS-2 when a character falls outside it.' },
+  { name: 'USSD', spec: '3GPP TS 24.090', note: 'Unstructured Supplementary Service Data: the session a *123# code opens.' },
+  { name: 'ActivityPub', spec: 'W3C Recommendation', note: 'The federated web. v0.1 reads its posts through the Mastodon API.' },
+  { name: 'HMAC-SHA256', spec: 'RFC 2104', note: 'Signs every webhook from the gateway to a tenant, with a timestamp.' },
+  { name: 'Redis', spec: 'optional', note: 'Shared session state when you run more than one gateway replica.' },
+];
+---
+<section class="integrations" id="standards" aria-labelledby="standards-title">
+  <header class="integrations__header">
+    <p class="badge">Open standards</p>
+    <h2 class="h2 h2--center" id="standards-title">
+      Built on open standards, <em>with one documented protocol.</em>
+    </h2>
+    <p class="integrations__lede">
+      The webhook protocol is documented, so a tenant can be written in any
+      language without an SDK.
+    </p>
+  </header>
+
+  <ul class="stiles">
+    {tiles.map((t) => (
+      <li class="stile">
+        <p class="stile__name">{t.name}</p>
+        <p class="stile__spec">{t.spec}</p>
+        <p class="stile__note">{t.note}</p>
+      </li>
+    ))}
+  </ul>
+</section>

@@ -1,0 +1,32 @@
+---
+import { quickstart, blob } from '../../data/site';
+---
+<section class="try" id="try" aria-labelledby="try-title">
+  <header class="try__header">
+    <div class="try__heading">
+      <p class="badge">Try it</p>
+      <h2 class="h2" id="try-title">Dial it from your terminal.<br /><em>No telco account.</em></h2>
+    </div>
+    <p class="try__lede">
+      Needs Docker for the gateway and Go for the handset. No telco account,
+      sandbox or tunnel.
+    </p>
+  </header>
+
+  <div class="try__panel">
+    <div class="term">
+      <div class="term__bar" aria-hidden="true"><i></i><i></i><i></i><span>terminal</span></div>
+      <pre class="term__code" tabindex="0" aria-label="Quickstart commands"><code>{quickstart}</code></pre>
+    </div>
+    <div class="try__side">
+      <p class="try__step"><span class="try__num">1</span><span>Clone the repository and set a webhook secret.</span></p>
+      <p class="try__step"><span class="try__num">2</span><span>Start the gateway and the Fediverse tenant with Docker Compose.</span></p>
+      <p class="try__step"><span class="try__num">3</span><span>Dial the demo shortcode from <code>cmd/ussdsim</code> in a second terminal.</span></p>
+      <p class="try__more">
+        To dial from a browser handset instead, enable the Africa's Talking
+        adapter and point a free sandbox USSD channel at the gateway. See{' '}
+        <a href={`${blob}/docs/telco-access.md`}>getting USSD access in practice</a>.
+      </p>
+    </div>
+  </div>
+</section>

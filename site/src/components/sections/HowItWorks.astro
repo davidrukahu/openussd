@@ -1,0 +1,77 @@
+---
+/* The template animates this panel with Lottie files showing third-party
+   apps. Here the canyon panel holds a static diagram of the real data path
+   instead; the pills highlight one stage at a time. */
+const steps = [
+  {
+    label: 'Dial',
+    title: 'A handset dials *384*1234#',
+    body: 'Any phone with a SIM. The network, or an aggregator in front of it, posts each step of the session to the gateway in its own callback format.',
+  },
+  {
+    label: 'Gateway',
+    title: 'OpenUSSD turns it into one canonical event',
+    body: "A telco adapter turns the network's callback into a canonical event, the session store keeps state between screens, and the tenant router signs a webhook to the service that owns the shortcode.",
+  },
+  {
+    label: 'Your service',
+    title: 'Your service answers in any language',
+    body: 'It verifies the signature and replies with the next screen. The Go SDK builds screens and keeps each one inside the handset budget; a TypeScript SDK is planned.',
+  },
+];
+---
+<section class="hiw" id="how" aria-labelledby="how-title">
+  <header class="hiw__header">
+    <p class="badge">How it works</p>
+    <h2 class="h2 h2--center" id="how-title">
+      From keypad to web service.&nbsp;<em>In three hops.</em>
+    </h2>
+  </header>
+
+  <div class="hiw__panel" id="hiw-panel" data-step="0">
+    <div class="hiw__pills">
+      {steps.map((s, i) => (
+        <button class={`hiw__pill${i === 0 ? ' is-active' : ''}`} data-step={i} type="button" aria-pressed={i === 0 ? 'true' : 'false'} aria-controls="hiw-stage">
+          {i + 1}. {s.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="hiw__stage" id="hiw-stage">
+      <ol class="flow">
+        <li class="flow__node" data-step="0">
+          <p class="flow__kicker">1. Dial</p>
+          <p class="flow__name">Handset</p>
+          <p class="flow__mono">*384*1234#</p>
+          <p class="flow__sub">network or aggregator</p>
+        </li>
+        <li class="flow__link" aria-hidden="true"><span>native callback</span></li>
+        <li class="flow__node flow__node--gateway" data-step="1">
+          <p class="flow__kicker">2. Gateway</p>
+          <p class="flow__name">OpenUSSD gateway</p>
+          <ul class="flow__rows">
+            <li><b>telco adapter</b> canonical event</li>
+            <li><b>session store</b> memory or Redis</li>
+            <li><b>tenant router</b> shortcode, menu</li>
+          </ul>
+        </li>
+        <li class="flow__link" aria-hidden="true"><span>HMAC-signed webhook</span></li>
+        <li class="flow__node" data-step="2">
+          <p class="flow__kicker">3. Your service</p>
+          <p class="flow__name">Your service</p>
+          <p class="flow__mono">any language</p>
+          <p class="flow__sub">Go SDK today, TypeScript planned</p>
+        </li>
+      </ol>
+
+      <div class="flow__captions" aria-live="polite">
+        {steps.map((s, i) => (
+          <div class={`flow__caption${i === 0 ? ' is-active' : ''}`} data-step={i}>
+            <p class="flow__title">{s.title}</p>
+            <p class="flow__body">{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
