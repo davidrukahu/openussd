@@ -178,7 +178,7 @@ M6 work.
 
 ### Africa's Talking fixtures captured from the sandbox
 
-**Completed:** 2026-10-09. Three fixtures captured from the sandbox simulator
+**Completed:** v0.1.2 (2026-10-09). Three fixtures captured from the sandbox simulator
 alongside the hand-written ones; see the provenance table in
 `gateway/testdata/fixtures/africastalking/PROVENANCE.md`.
 
