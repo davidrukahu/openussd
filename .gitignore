@@ -21,5 +21,6 @@ out/
 node_modules/
 *.log
 
-# Local NLnet application drafts (private — not for public repo)
+# Local NLnet application drafts (private, not for the public repo)
 NLnet/
+.nlnet/

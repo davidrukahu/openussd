@@ -21,15 +21,20 @@ adapters:
     enabled: true
 
   # Africa's Talking signs nothing, so the allowlist is the only thing
-  # standing between the endpoint and forged subscriber input. Replace
-  # these with the source ranges the provider publishes for your account
-  # before exposing the gateway.
+  # standing between the endpoint and forged subscriber input. The range
+  # below is a placeholder from the documentation block (RFC 5737) and
+  # matches nothing: replace it with the source addresses Africa's Talking
+  # gives you for your account before enabling the adapter. See
+  # docs/telco-access.md for what the sandbox uses.
   africastalking:
     enabled: false
     allowed_sources:
-      - "196.201.214.0/24"
-    # Your own ingress or load balancer - the only hops allowed to set
-    # X-Forwarded-For.
+      - "192.0.2.0/24"
+    # Your own ingress, load balancer or local HTTP tunnel agent (for a
+    # test tunnel, 127.0.0.1/32 with the gateway listening on 127.0.0.1;
+    # see docs/telco-access.md): the only hops allowed to set
+    # X-Forwarded-For. Never list them in allowed_sources, and turn the
+    # simulator off before making the gateway reachable.
     trusted_forwarders: []
 
 tenants:

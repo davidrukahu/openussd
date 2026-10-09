@@ -2,16 +2,16 @@
 
 - **Status:** draft (implemented; see "Validated against a first implementation")
 - **Author:** David W
-- **Updated:** 2026-09-20
+- **Updated:** 2026-10-09
 
 ## Context
 
 Each Mobile Network Operator (MNO) exposes USSD through a slightly different HTTP callback shape:
 
-- **Safaricom Daraja** - JSON, fields like `sessionId`, `serviceCode`, `phoneNumber`, `text` (where `text` is the menu path joined by `*`).
-- **MTN** - varies by country; Nigeria's format differs from Uganda's, both differ from Safaricom.
+- **Safaricom** - direct access needs a commercial shortcode agreement. Daraja, named in earlier drafts, is the M-Pesa portal and exposes no USSD (see [telco-access](../telco-access.md)).
+- **MTN** - varies by country; Nigeria's format differs from Uganda's, both differ from Africa's Talking.
 - **Airtel** - different again; some markets expose only SOAP.
-- **Aggregators (Africa's Talking, Infobip, Twilio)** - yet another shape, layered over the underlying MNO.
+- **Aggregators (Africa's Talking, Infobip)** - yet another shape, layered over the underlying MNO. Africa's Talking posts a form with `sessionId`, `serviceCode`, `phoneNumber`, `networkCode` and `text`, where `text` is the menu path joined by `*`.
 
 If the gateway lets MNO-specific shapes leak into application code, every USSD app has to special-case every MNO it deploys to. That defeats the point of the project.
 
@@ -54,8 +54,8 @@ type Response struct {
 
 ### Why this shape
 
-- **Path as `[]string`** rather than the Safaricom-style `*`-joined `text` field. Adapters split or reconstruct as needed; applications never parse the raw blob.
-- **`Phase` enum** rather than a boolean `isNew`. MTN and Safaricom express session lifecycle differently; the enum normalises.
+- **Path as `[]string`** rather than the Africa's Talking-style `*`-joined `text` field. Adapters split or reconstruct as needed; applications never parse the raw blob.
+- **`Phase` enum** rather than a boolean `isNew`. Networks and aggregators express session lifecycle differently; the enum normalises.
 - **`Raw` retained** so the audit log can reproduce exactly what the MNO sent. Required for incident investigation and for contract tests.
 - **`Verify` separate from `Parse`** so a request that fails authenticity does not allocate session state. Adapters that have no verification (e.g. unauthenticated dev sandboxes) return `nil`.
 
@@ -81,8 +81,10 @@ Each adapter ships with **fixture-driven contract tests**: a directory of `reque
   Safaricom has no public USSD sandbox - Daraja is the M-Pesa portal, not a
   USSD one. Landed an **Africa's Talking** adapter instead; see
   [`docs/telco-access.md`](../telco-access.md).
-- Capture the Africa's Talking fixtures against the live sandbox, replacing
-  the hand-written ones.
+- ~~Capture the Africa's Talking fixtures against the live sandbox.~~
+  Captured 2026-10-09; the captures sit alongside the hand-written fixtures
+  rather than replacing them, since those cover cases the simulator cannot
+  produce.
 - Land a second real network - MTN via a country sandbox, or Africa's
   Talking production - and adjust the interface based on what did not fit.
 - Promote RFC to *accepted* once two adapters and one production tenant ship without interface changes for one release cycle.
@@ -108,9 +110,11 @@ fixture for it.
 
 **`Phase` needed a `Terminal()` helper, not more cases.** The four cases
 are right, but `Cancel` and `Timeout` share a property the gateway needs to
-branch on: no response will reach the handset. Africa's Talking never
-delivers either as a callback; the session simply stops. Those phases are
-synthesised by the session store on expiry, never produced by that adapter.
+branch on: no response will reach the handset. The Africa's Talking
+dialogue callback never carries either; a separate Events URL callback
+reports how a session ended, and the gateway does not handle it yet (see
+[telco-access](../telco-access.md)). The session store expires an abandoned
+dialogue silently, so today only the local simulator produces these phases.
 
 **`Raw` earned its place.** It is what makes fixture capture a copy from
 the audit log rather than a packet-capture exercise. It is stripped before
@@ -165,5 +169,5 @@ screens the network refuses.
   for v1 looks correct.
 - **Two adapters is not two networks.** The simulator is ours, so it cannot
   disagree with us. Promotion to *accepted* still needs a second real
-  network - and the Africa's Talking fixtures still need capturing against
-  the live sandbox rather than being written from the published shape.
+  network. The Africa's Talking sandbox wire format is now confirmed by
+  captured fixtures (`07` to `09`); production callbacks are not yet.

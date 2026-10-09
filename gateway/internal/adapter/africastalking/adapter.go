@@ -9,10 +9,11 @@
 //
 // # Wire format
 //
-// Inbound is an HTML form POST:
+// Inbound is an HTML form POST, as captured from the sandbox (field order
+// and how much of serviceCode is percent-encoded are not significant):
 //
-//		sessionId=ATUid_abc123&serviceCode=*384*1234%23&phoneNumber=%2B254711223344
-//		&networkCode=63902&text=1*2
+//		phoneNumber=%2B254000000001&serviceCode=%2A384%2A70421%23&text=1
+//		&sessionId=ATUid_e9d0662dea3f3db658e79d9b62f7900c&networkCode=99999
 //
 //	  - text is the user's input so far, joined with "*", and empty on the
 //	    first request of a session. There is no explicit lifecycle field, so
@@ -136,9 +137,10 @@ func (a *Adapter) now() time.Time {
 // phaseFor infers the session lifecycle from the input field.
 //
 // The provider has no explicit lifecycle signal: an empty text field means
-// the user has just dialled. Cancel and timeout are never delivered as
-// callbacks at all, the session simply stops, so this adapter produces
-// neither. Nothing else produces them either today: the session store
+// the user has just dialled. The dialogue callback never carries cancel or
+// timeout; a separate Events URL callback reports how a session ended, and
+// that endpoint is not handled yet (see docs/telco-access.md), so this
+// adapter produces neither. Nothing else produces them either today: the session store
 // expires an abandoned dialogue silently rather than synthesising a
 // terminal event. Only the local simulator can send one, which is how the
 // gateway's terminal-phase handling gets exercised.

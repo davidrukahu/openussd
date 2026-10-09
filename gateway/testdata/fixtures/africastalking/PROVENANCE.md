@@ -22,12 +22,26 @@ proves it matches the network.
 | `04-empty-segment` | hand-written | User sent an empty reply mid-session; the empty segment is preserved, not filtered. |
 | `05-msisdn-without-plus` | hand-written | Uganda shortcode, `phoneNumber` missing the E.164 `+`. Guards the normalisation that otherwise forks the session key. |
 | `06-free-text-input` | hand-written | Free-text entry, form-encoded space. |
+| `07-captured-begin` | captured 2026-10-09 | Sandbox, fresh dial. |
+| `08-captured-continue` | captured 2026-10-09 | Sandbox, one selection. |
+| `09-captured-nested` | captured 2026-10-09 | Sandbox, three selections. |
 
-**All fixtures are currently hand-written** from the provider's published
-request shape. They have not yet been captured against the live sandbox.
+The captured fixtures came from the Africa's Talking sandbox simulator,
+dialling `*384*70421#`, a channel on the shared `*384#` code, pointed at a
+tunnelled gateway. Bodies are what the provider sent, except for the
+subscriber number noted below. The headers are reduced to the ones the
+provider set (`User-Agent`, `Content-Type`, `Content-Length`), `Host` is
+replaced with the placeholder `gateway.example`, and headers added by the
+capture tunnel are left out. The subscriber number in the captures has been
+replaced with `+254000000001`, which no Kenyan network allocates; it has the
+same length, so `Content-Length` is unchanged.
 
-Replacing them is issue #7's real deliverable: register for the Africa's
-Talking sandbox, point a USSD channel at a tunnelled gateway, dial from the
-browser simulator, and copy the bodies the gateway logs in `Event.Raw` into
-these files. Any fixture replaced that way moves to *captured* in the table
-above, with the capture date.
+What the captures showed that the hand-written fixtures did not:
+
+- The field order differs (`phoneNumber` first) and `serviceCode` arrives
+  fully percent-encoded (`%2A384%2A70421%23`).
+- The sandbox reports `networkCode=99999` rather than a real operator code.
+- `User-Agent` is `at-ussd-api/1.0`.
+
+The hand-written fixtures stay: they cover cases the simulator cannot easily
+produce (an empty segment, a number without `+`, free text with spaces).
