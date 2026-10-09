@@ -43,7 +43,7 @@ func run() error {
 	// Not mastodon.social: it requires an authenticated user for the
 	// public timeline API, which a feature phone cannot provide. Any
 	// instance that still serves that endpoint openly will do.
-	instance := flag.String("instance", envOr("FEDIVERSE_INSTANCE", "https://mstdn.social"), "Mastodon instance base URL")
+	instance := flag.String("instance", envOr("FEDIVERSE_INSTANCE", "https://fosstodon.org"), "Mastodon instance base URL")
 	flag.Parse()
 
 	secret := os.Getenv("FEDIVERSE_WEBHOOK_SECRET")

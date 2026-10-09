@@ -88,6 +88,57 @@ becomes an unattributed load generator against a third-party instance and
 gets the operator's egress IP blocked. A 10 to 30 second TTL cache keyed on
 the instance removes the class.
 
+### Decide a redirect policy for instance fetches
+
+**Priority:** P2
+
+`defaultInstanceClient` follows any redirect, including to plain `http://`
+and to private or link-local addresses. Now that the demo defaults to an
+instance the operator does not run, a hostile or compromised instance could
+point the adapter at internal services, and the first 200 printable bytes of
+their JSON `error` field would reach the operator log. Allowing only
+same-host or HTTPS redirects in `CheckRedirect` would close that.
+
+### Cap the host in instance errors
+
+**Priority:** P2
+
+`PublicTimeline` cuts the remote error text to 200 bytes but not the host
+it names. Behind an HTTP proxy, a hostile instance can redirect to a very
+long host name that only the proxy resolves, and every handset request then
+logs it. The host wants the same cut as the error text, and an empty host
+(possible only with a custom transport) should fall back to the configured
+one.
+
+### Check the instance at startup
+
+**Priority:** P2
+
+A closed or misconfigured instance shows up only when a subscriber dials:
+`/healthz` always answers ok, and an instance given without a scheme
+(`fosstodon.org`) starts cleanly and then fails every dialogue. Refusing to
+start without an http or https URL, and logging one probe of the timeline
+with the sign-in hint, would surface both at deploy time.
+
+### Make instance errors easier to act on
+
+**Priority:** P3
+
+Return a typed error for "requires sign-in" so the menu handler can log it
+once, or at a lower level, instead of as an error on every keypress. Name
+both the configured and the answering host when a redirect happened. Treat
+right-to-left letters and invisible fillers in remote text as `printable`
+already treats bidi controls. Pin the 200-byte cap exactly in the test.
+
+### Keep no-break spaces in logged instance errors
+
+**Priority:** P3
+
+`printable` drops every character `unicode.IsPrint` rejects, which includes
+U+00A0 and U+202F. French typography puts those before `:` and `?`, so an
+instance answering in French logs words run together. Dropping only format
+and control characters would keep them.
+
 ## Testing
 
 ### Test the Redis session store
