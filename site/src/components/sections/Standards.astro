@@ -2,22 +2,22 @@
 /* The template's integrations grid, with text tiles in place of product
    logos: these are the specifications the code is written against. */
 const tiles = [
-  { name: 'GSM 03.38', spec: '3GPP TS 23.038', note: 'The 7-bit alphabet every screen is measured in, with UCS-2 when a character falls outside it.' },
-  { name: 'USSD', spec: '3GPP TS 24.090', note: 'Unstructured Supplementary Service Data: the session a *123# code opens.' },
-  { name: 'ActivityPub', spec: 'W3C Recommendation', note: 'The federated web. v0.1 reads its posts through the Mastodon API.' },
-  { name: 'HMAC-SHA256', spec: 'RFC 2104', note: 'Signs every webhook from the gateway to a tenant, with a timestamp.' },
-  { name: 'Redis', spec: 'optional', note: 'Shared session state when you run more than one gateway replica.' },
+  { name: 'GSM 03.38', spec: '3GPP TS 23.038', note: 'The standard alphabet for phone text. A screen holds 182 of its letters, or 70 when other characters appear.' },
+  { name: 'USSD', spec: '3GPP TS 24.090', note: 'Unstructured Supplementary Service Data: the menu session a *123# code opens.' },
+  { name: 'ActivityPub', spec: 'W3C Recommendation', note: 'The standard behind Mastodon and the open social web. The demo reads posts through Mastodon.' },
+  { name: 'HMAC-SHA256', spec: 'RFC 2104', note: 'A standard way to sign messages, so an app can check that a message really came from OpenUSSD.' },
+  { name: 'Redis', spec: 'optional', note: 'Optional. Shares the conversation memory when you run OpenUSSD on more than one server.' },
 ];
 ---
 <section class="integrations" id="standards" aria-labelledby="standards-title">
   <header class="integrations__header">
     <p class="badge">Open standards</p>
     <h2 class="h2 h2--center" id="standards-title">
-      Built on open standards, <em>with one documented protocol.</em>
+      Built on public standards, <em>not locked to one company.</em>
     </h2>
     <p class="integrations__lede">
-      The webhook protocol is documented, so a tenant can be written in any
-      language without an SDK.
+      OpenUSSD follows published standards, and the way it talks to apps is
+      documented, so anyone can build on it in any programming language.
     </p>
   </header>
 

@@ -8,9 +8,9 @@ export const tree = `${repo}/tree/main`;
 export const codeberg = 'https://codeberg.org/davidrukahu/openussd';
 export const issue = (n: number) => `${repo}/issues/${n}`;
 
-export const title = 'OpenUSSD: an open gateway and SDK for the feature-phone web';
+export const title = 'OpenUSSD: the open web, on any phone';
 export const description =
-  'OpenUSSD is an open-source, self-hostable USSD gateway and SDK. v0.1 runs end to end: dial a shortcode from your terminal and page through a Mastodon timeline, with no telco account.';
+  'Free, open-source software that lets any organisation build a USSD menu, the *123# kind that works on every phone without internet, once for every network.';
 
 export interface NavLink { href: string; label: string }
 
@@ -56,28 +56,28 @@ export const screens: Screen[] = [
 export type Ledger = [string, string | null, string | null];
 
 export const working: Ledger[] = [
-  ['Canonical session events and the adapter interface', `${blob}/docs/rfcs/0001-telco-adapter-interface.md`, 'RFC-0001'],
-  ["Africa's Talking adapter, contract tests including captures from the live sandbox", issue(7), '#7'],
-  ['Session store: in-memory and Redis, 180 s idle expiry', null, null],
-  ['Tenant routing with HMAC-signed webhooks', `${blob}/docs/webhook-protocol.md`, 'protocol'],
-  ['Go SDK: typed screens, state, i18n, encoding-aware screen budget', 'https://pkg.go.dev/github.com/davidrukahu/openussd/sdk/go', 'pkg.go.dev'],
-  ['Mastodon public timeline over USSD, paginated', null, null],
+  ['The core that receives each call and keeps track of every conversation', `${blob}/docs/rfcs/0001-telco-adapter-interface.md`, 'design'],
+  ["A connection to Africa's Talking, tested against their live test system", issue(7), '#7'],
+  ['Conversations remembered between screens, until 3 minutes without a reply', null, null],
+  ['Signed messages to the app that owns each code, so it knows they are genuine', `${blob}/docs/webhook-protocol.md`, 'protocol'],
+  ['A Go toolkit for building menus that always fit the screen, in several languages', 'https://pkg.go.dev/github.com/davidrukahu/openussd/sdk/go', 'pkg.go.dev'],
+  ['A demo that reads Mastodon posts on a basic phone', null, null],
 ];
 
 export const notYet: Ledger[] = [
   ['SMS', null, null],
-  ['A second real network', null, null],
-  ['TypeScript SDK', null, null],
-  ['Fediverse write paths and identity binding', issue(9), '#9'],
-  ['Postgres audit store', null, null],
-  ['Independent security audit', null, null],
+  ['A second network, such as MTN', null, null],
+  ['A toolkit for TypeScript (JavaScript)', null, null],
+  ['Posting to Mastodon from a phone, and linking a phone to an account', issue(9), '#9'],
+  ['A permanent record of each session', null, null],
+  ['An independent security review', null, null],
 ];
 
 export const limitations: string[] = [
-  "Webhooks carry no replay nonce. The signature's 5-minute window bounds replay but does not prevent it, so tenants should deduplicate.",
-  'The simulator adapter authenticates nothing. It is the demo; never expose it.',
-  'Two callbacks for one session are not yet serialised; a retried callback can reach the tenant twice.',
-  'No prebuilt binaries. Build from source or use Docker Compose.',
+  'Someone who captures a message from OpenUSSD to an app could send it again within 5 minutes. Until this is fixed, apps should ignore repeats.',
+  'The test phone that comes with OpenUSSD has no security. It is only for trying OpenUSSD on your own computer.',
+  'If the phone company retries a step, the app can receive it twice.',
+  'There are no ready-made downloads yet. You build it from the source code or run it with Docker.',
 ];
 
 /** [name, link, description] */
@@ -102,20 +102,28 @@ export interface FaqItem { q: string; a: string }
 /** Answers are trusted HTML written here, so they can carry links. */
 export const faqs: FaqItem[] = [
   {
-    q: 'Do I need a telco account?',
-    a: `No, not for development. The terminal simulator and the free Africa's Talking sandbox need none. Production needs an agreement with an aggregator or an operator; <a href="${blob}/docs/telco-access.md">getting USSD access in practice</a> sets out what is obtainable today.`,
+    q: 'What is USSD?',
+    a: 'It is the menu you get when you dial a code such as *334# for M-Pesa or *144# for your airtime balance. You reply with a number, and the next screen appears. It works on every mobile phone, needs no app and no internet, and costs the user little or nothing.',
+  },
+  {
+    q: 'Who is OpenUSSD for?',
+    a: 'Organisations that want to reach people on basic phones, such as clinics, schools, savings groups, co-ops and local government, and the developers who build services for them. People who dial a code never see OpenUSSD; they just see the menu.',
+  },
+  {
+    q: 'Do I need an agreement with a phone company?',
+    a: `Not to build and test. The test phone that comes with OpenUSSD and the free Africa's Talking test system need no agreement. To go live you need an agreement with Africa's Talking or a phone company; <a href="${blob}/docs/telco-access.md">getting USSD access in practice</a> explains what is possible today.`,
   },
   {
     q: 'Which networks does it support?',
-    a: `Africa's Talking today, which reaches networks in Kenya, Uganda, Nigeria, Rwanda, Tanzania and Malawi. MTN and SMPP are planned. See <a href="${blob}/docs/telco-access.md">docs/telco-access.md</a>.`,
+    a: `Africa's Talking today, which reaches networks in Kenya, Uganda, Nigeria, Rwanda, Tanzania and Malawi. MTN and others are planned. See <a href="${blob}/docs/telco-access.md">the network guide</a>.`,
   },
   {
-    q: 'Is it production ready?',
-    a: 'No. v0.1 is a working spike, and interfaces will change before 1.0. See <a href="#limitations">Known limitations</a>.',
+    q: 'Is it ready to use with real people?',
+    a: 'Not yet. This is an early version that works from end to end, and parts of it will change before version 1.0. See <a href="#limitations">known limitations</a>.',
   },
   {
     q: 'What does it cost?',
-    a: `Nothing. It is free software under <a href="${blob}/LICENSE">AGPL-3.0-or-later</a>. Running it costs whatever your hosting and your aggregator charge per session.`,
+    a: `OpenUSSD is free, open-source software under <a href="${blob}/LICENSE">AGPL-3.0-or-later</a>. Running it costs whatever your hosting and Africa's Talking or your phone company charge per session.`,
   },
   {
     q: 'How is it funded?',

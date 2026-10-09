@@ -6,46 +6,60 @@ const benefits = [
   {
     num: '01',
     mosaic: '/assets/mosaic-a.png',
-    title: 'Self-hosted',
-    desc: 'One binary on your own server, started with Docker Compose or built from source. Sessions live in memory; add Redis when you run more than one replica.',
-    art: 'host',
+    title: 'Clinic reminders',
+    desc: 'A clinic reminds patients of a visit and lets them confirm or change it by pressing a number. No app, no smartphone, no data bundle.',
+    art: 'screen',
+    screen: 'Kiambu Health Centre\nYour visit: Tue 14 Oct\n1. Confirm\n2. Change date\n0. Quit',
   },
   {
     num: '02',
     mosaic: '/assets/mosaic-d.png',
-    title: 'One adapter interface',
-    desc: "Write the service once and change networks underneath it. Africa's Talking today; MTN and SMPP are planned.",
-    art: 'adapters',
+    title: 'Savings group balances',
+    desc: 'Members of a chama check their savings and the next meeting date from any phone, any time, without waiting for the treasurer.',
+    art: 'screen',
+    screen: 'Umoja Chama\nYour savings: KES 12,400\nNext meeting: Sat 2pm\n1. Contributions\n0. Quit',
   },
   {
     num: '03',
     mosaic: '/assets/mosaic-b.png',
-    title: 'Encoding-aware screens',
-    desc: 'A screen holds 182 GSM-7 characters, or 70 the moment a character outside the GSM alphabet appears: many accented letters, any non-Latin script, any emoji. The SDK measures every screen.',
-    art: 'budget',
+    title: 'Community news',
+    desc: 'This one works today. The demo reads posts from Mastodon, a free and open social network, so a co-op or a school can reach people on basic phones.',
+    art: 'screen',
+    screen: screens[1].body,
   },
   {
     num: '04',
     mosaic: '/assets/mosaic-c.png',
-    title: 'A bridge to the federated web',
-    desc: 'The reference adapter reads a Mastodon public timeline from a *384*1234# menu, paginated to fit the handset.',
-    art: 'fedi',
+    title: 'Build once, every network',
+    desc: "Each phone company connects in its own way. OpenUSSD translates, so you build your menu once. Africa's Talking works today; more networks are planned.",
+    art: 'adapters',
   },
 ];
-const active = '02';
+const active = '01';
 ---
 <section class="why" id="why" aria-labelledby="why-title">
   <header class="why__header">
     <div class="why__heading">
-      <p class="badge">Why OpenUSSD</p>
-      <h2 class="h2" id="why-title">One open layer,<br />not one integration per telco</h2>
+      <p class="badge">Why it matters</p>
+      <h2 class="h2" id="why-title">Every phone can do this.<br />Few can build it.</h2>
     </div>
-    <p class="why__lede">
-      In Sub-Saharan Africa, 60% of mobile internet subscribers still use a
-      feature phone or a 3G smartphone
-      (<a href="https://www.gsma.com/somic/wp-content/uploads/2025/09/The-State-of-Mobile-Internet-Connectivity-2025-Overview-Report.pdf">GSMA, 2025</a>).
-      For them a USSD shortcode is often the only way to reach a service.
-    </p>
+    <div class="why__lede">
+      <p>
+        If you have dialled *334# for M-Pesa or *144# for your airtime
+        balance, you have used USSD. You dial a short code, a text menu
+        appears, and you reply with a number. It works on every phone, with
+        no app and no internet.
+      </p>
+      <p>
+        In Sub-Saharan Africa, 60% of mobile internet subscribers still use a
+        basic phone or an old 3G smartphone
+        (<a href="https://www.gsma.com/somic/wp-content/uploads/2025/09/The-State-of-Mobile-Internet-Connectivity-2025-Overview-Report.pdf">GSMA, 2025</a>).
+        For many of them a menu like this is the only way to reach a service.
+        But building one means connecting to each phone company in its own
+        way, so today it is mostly banks and phone companies that do it.
+        OpenUSSD is for everyone else.
+      </p>
+    </div>
   </header>
 
   <ul class="why-cards" id="why-cards">
@@ -58,13 +72,6 @@ const active = '02';
         </div>
         <div class="wcard__open">
           <div class={`wcard__img wart wart--${b.art}`} aria-hidden="true">
-            {b.art === 'host' && (
-              <>
-                <span class="wart__chip wart__chip--mono">docker compose up --build</span>
-                <span class="wart__row"><i class="wart__dot"></i>gateway<span class="wart__muted">one binary</span></span>
-                <span class="wart__row"><i class="wart__dot wart__dot--off"></i>Redis<span class="wart__muted">optional</span></span>
-              </>
-            )}
             {b.art === 'adapters' && (
               <>
                 <span class="wart__tiles">
@@ -77,14 +84,8 @@ const active = '02';
                 <span class="wart__pill"><i class="wart__dot"></i>live today<i class="wart__dot wart__dot--off"></i>planned</span>
               </>
             )}
-            {b.art === 'budget' && (
-              <>
-                <span class="wart__meter"><b>GSM-7</b><span class="wart__bar"><i style="width:85.7%"></i></span>156 / 182</span>
-                <span class="wart__meter wart__meter--ucs"><b>UCS-2</b><span class="wart__bar"><i style="width:57.1%"></i></span>40 / 70</span>
-              </>
-            )}
-            {b.art === 'fedi' && (
-              <span class="wart__screen">{screens[1].body}</span>
+            {b.art === 'screen' && (
+              <span class="wart__screen">{b.screen}</span>
             )}
           </div>
           <div class="wcard__content">
@@ -95,4 +96,9 @@ const active = '02';
       </li>
     ))}
   </ul>
+  <p class="why__note">
+    The clinic and savings group screens are examples of what an organisation
+    could build; ready-made example apps are on the roadmap. The community
+    news screen is real output from the working demo.
+  </p>
 </section>

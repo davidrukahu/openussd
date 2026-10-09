@@ -984,3 +984,17 @@ code {
   .flow__node,
   .stile { transition: none; }
 }
+
+/* ---------- plain-language additions ---------- */
+
+.why__lede p { margin: 0 0 12px; }
+.why__lede p:last-child { margin-bottom: 0; }
+
+.why__note {
+  max-width: 640px;
+  margin: 24px 0 0;
+  font-family: var(--font-ui);
+  font-size: var(--m-size);
+  line-height: 1.4;
+  color: var(--grey-800);
+}

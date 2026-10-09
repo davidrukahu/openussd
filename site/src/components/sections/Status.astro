@@ -8,17 +8,18 @@ import { working, notYet, limitations, blob, issue } from '../../data/site';
   <header class="status__header">
     <div class="status__heading">
       <p class="badge">Status</p>
-      <h2 class="h2" id="status-title">v0.1 works end to end.<br /><em>It is not production.</em></h2>
+      <h2 class="h2" id="status-title">It works today.<br /><em>It is not ready for real users yet.</em></h2>
     </div>
     <p class="status__lede">
-      Free and open source under AGPL-3.0-or-later. Interfaces will change
-      before 1.0. What runs today, what does not yet, and what to watch for:
+      This is version 0.1, an early version. Here is what works, what is
+      still missing, and what to watch out for. Parts will change before
+      version 1.0.
     </p>
   </header>
 
   <div class="scards">
     <article class="scard scard--featured" aria-labelledby="st-working">
-      <h3 class="scard__name" id="st-working">Working in v0.1</h3>
+      <h3 class="scard__name" id="st-working">Works today</h3>
       <ul class="scard__list">
         {working.map(([text, href, label]) => (
           <li><i aria-hidden="true"></i><span>{text}{href && <> (<a href={href}>{label}</a>)</>}</span></li>
